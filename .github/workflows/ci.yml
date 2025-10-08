@@ -28,8 +28,6 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    # Skip E2E tests if secrets are not configured
-    if: ${{ secrets.APPWRITE_ENDPOINT != '' }}
     steps:
       - uses: actions/checkout@v3
       
