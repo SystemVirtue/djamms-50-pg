@@ -31,7 +31,15 @@
     "schema:clean": "node scripts/schema-manager/appwrite-schema.cjs --apply --clean --confirm",
     "create-collections": "node scripts/schema-manager/appwrite-schema.cjs --create-collections --apply --confirm",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "deploy:vercel": "bash scripts/deploy-vercel.sh",
+    "deploy:landing": "cd apps/landing && vercel --prod",
+    "deploy:auth": "cd apps/auth && vercel --prod",
+    "deploy:player": "cd apps/player && vercel --prod",
+    "deploy:admin": "cd apps/admin && vercel --prod",
+    "deploy:kiosk": "cd apps/kiosk && vercel --prod",
+    "deploy:dashboard": "cd apps/dashboard && vercel --prod",
+    "deploy:all": "npm run build && npm run deploy:landing && npm run deploy:auth && npm run deploy:player && npm run deploy:admin && npm run deploy:kiosk && npm run deploy:dashboard"
   },
   "dependencies": {
     "appwrite": "^11.0.0",
