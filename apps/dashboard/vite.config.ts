@@ -4,6 +4,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  root: resolve(__dirname),
   resolve: {
     alias: {
       '@shared': resolve(__dirname, '../../packages/shared/src'),
@@ -15,5 +16,6 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    outDir: resolve(__dirname, 'dist'),
   },
 });

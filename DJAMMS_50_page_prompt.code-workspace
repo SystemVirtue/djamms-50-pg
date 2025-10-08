@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../Downloads/djamms.app-ssl-bundle"
 		}
 	],
 	"settings": {

@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run build:kiosk",
-  "outputDirectory": "apps/kiosk/dist",
-  "installCommand": "npm install"
+  "buildCommand": "npm run build:auth",
+  "outputDirectory": "apps/auth/dist",
+  "installCommand": "npm install",
+  "framework": null
 }
