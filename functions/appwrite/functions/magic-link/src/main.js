@@ -46,7 +46,8 @@ module.exports = async ({ req, res, log, error }) => {
       log(`Magic link created: ${token}`);
 
       // Send email via Resend
-      const magicLink = `https://auth.djamms.app/callback?token=${token}&email=${encodeURIComponent(email)}`;
+      // Use secret/userId format to match AuthCallback expectations
+      const magicLink = `${body.redirectUrl || 'https://auth.djamms.app/callback'}?secret=${token}&userId=${encodeURIComponent(email)}`;
       
       if (process.env.RESEND_API_KEY) {
         try {
@@ -150,12 +151,20 @@ module.exports = async ({ req, res, log, error }) => {
 
     // Verify magic link
     if (action === 'callback' || action === 'verify') {
+      // Support both old (secret/userId) and new (token/email) parameter names
+      const tokenToVerify = magicToken || body.secret;
+      const emailToVerify = email || body.userId;
+      
+      if (!tokenToVerify || !emailToVerify) {
+        return res.json({ success: false, error: 'Missing token or email parameter' }, 400);
+      }
+      
       const response = await databases.listDocuments(
         process.env.APPWRITE_DATABASE_ID,
         'magicLinks',
         [
-          Query.equal('email', email),
-          Query.equal('token', magicToken),
+          Query.equal('email', emailToVerify),
+          Query.equal('token', tokenToVerify),
           Query.equal('used', false)
         ]
       );
@@ -182,7 +191,7 @@ module.exports = async ({ req, res, log, error }) => {
       const usersResp = await databases.listDocuments(
         process.env.APPWRITE_DATABASE_ID,
         'users',
-        [Query.equal('email', email)]
+        [Query.equal('email', emailToVerify)]
       );
 
       let user;
@@ -201,7 +210,7 @@ module.exports = async ({ req, res, log, error }) => {
           'unique()',
           {
             userId: `user_${Date.now()}`,
-            email,
+            email: emailToVerify,
             role: 'staff',
             autoplay: true,
             createdAt: new Date().toISOString(),
