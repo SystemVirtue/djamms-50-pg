@@ -1,9 +1,9 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd ../.. && npm run build:admin",
+  "outputDirectory": "apps/admin/dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "vite",
+  "installCommand": "cd ../.. && npm install",
+  "framework": null,
   "rewrites": [
     {
       "source": "/admin/:path*",

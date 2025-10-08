@@ -1,9 +1,9 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd ../.. && npm run build:dashboard",
+  "outputDirectory": "apps/dashboard/dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "vite",
+  "installCommand": "cd ../.. && npm install",
+  "framework": null,
   "rewrites": [
     {
       "source": "/dashboard/:path*",
