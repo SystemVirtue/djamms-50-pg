@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && npm run build:admin",
+  "buildCommand": "cd ../.. && vite build --config apps/admin/vite.config.ts",
   "outputDirectory": "apps/admin/dist",
   "devCommand": "npm run dev",
   "installCommand": "cd ../.. && npm install",

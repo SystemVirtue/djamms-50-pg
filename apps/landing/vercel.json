@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && npm run build:landing",
+  "buildCommand": "cd ../.. && vite build --config apps/landing/vite.config.ts",
   "outputDirectory": "apps/landing/dist",
   "devCommand": "npm run dev",
   "installCommand": "cd ../.. && npm install",

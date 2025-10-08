@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && npm run build:kiosk",
+  "buildCommand": "cd ../.. && vite build --config apps/kiosk/vite.config.ts",
   "outputDirectory": "apps/kiosk/dist",
   "devCommand": "npm run dev",
   "installCommand": "cd ../.. && npm install",

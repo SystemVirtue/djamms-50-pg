@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && npm run build:dashboard",
+  "buildCommand": "cd ../.. && vite build --config apps/dashboard/vite.config.ts",
   "outputDirectory": "apps/dashboard/dist",
   "devCommand": "npm run dev",
   "installCommand": "cd ../.. && npm install",
