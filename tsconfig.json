@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@shared/*": ["./packages/shared/src/*"],
+      "@appwrite/*": ["./packages/appwrite-client/src/*"],
+      "@youtube-player/*": ["./packages/youtube-player/src/*"]
+    }
+  },
+  "include": ["apps/**/*", "packages/**/*", "tests/**/*"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "magic-link-function",
+  "version": "1.0.0",
+  "description": "DJAMMS Magic Link Authentication",
+  "main": "src/main.js",
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "node-appwrite": "^20.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "djamms-functions",
+  "version": "1.0.0",
+  "description": "AppWrite Cloud Functions for DJAMMS",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "appwrite": "^11.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

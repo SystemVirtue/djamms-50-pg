@@ -1,0 +1,593 @@
+{
+    "projectId": "68cc86c3002b27e13947",
+    "endpoint": "https://syd.cloud.appwrite.io/v1",
+    "projectName": "DJAMMS_v1",
+    "settings": {
+        "services": {
+            "account": true,
+            "avatars": true,
+            "databases": true,
+            "locale": true,
+            "health": true,
+            "storage": true,
+            "teams": true,
+            "users": true,
+            "sites": true,
+            "functions": true,
+            "graphql": true,
+            "messaging": true
+        },
+        "auth": {
+            "methods": {
+                "jwt": true,
+                "phone": false,
+                "invites": true,
+                "anonymous": false,
+                "email-otp": false,
+                "magic-url": true,
+                "email-password": true
+            },
+            "security": {
+                "duration": 31536000,
+                "limit": 0,
+                "sessionsLimit": 10,
+                "passwordHistory": 0,
+                "passwordDictionary": false,
+                "personalDataCheck": false,
+                "sessionAlerts": false,
+                "mockNumbers": []
+            }
+        }
+    },
+    "sites": [
+        {
+            "$id": "djamms-web-app",
+            "name": "DJAMMS Web App",
+            "enabled": true,
+            "logging": true,
+            "framework": "sveltekit",
+            "timeout": 30,
+            "installCommand": "npm install",
+            "buildCommand": "npm run build",
+            "outputDirectory": "./build",
+            "specification": "s-0.5vcpu-512mb",
+            "buildRuntime": "node-18.0",
+            "adapter": "ssr",
+            "fallbackFile": "",
+            "path": "sites/DJAMMS Web App"
+        }
+    ],
+    "tablesDB": [
+        {
+            "$id": "68e57de9003234a84cae",
+            "name": "djamms_production",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "users",
+            "$permissions": [],
+            "databaseId": "68e57de9003234a84cae",
+            "name": "Users",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "email",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "role",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "admin",
+                        "staff",
+                        "viewer"
+                    ],
+                    "format": "enum",
+                    "default": "staff"
+                },
+                {
+                    "key": "autoplay",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                },
+                {
+                    "key": "venueId",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                },
+                {
+                    "key": "avatar_url",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "format": "url",
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "venues",
+            "$permissions": [],
+            "databaseId": "68e57de9003234a84cae",
+            "name": "Venues",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "venueId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "slug",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "ownerId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "activePlayerInstanceId",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "status": "available",
+                    "orders": []
+                },
+                {
+                    "key": "ownerId_key",
+                    "type": "key",
+                    "status": "available",
+                    "orders": []
+                }
+            ]
+        },
+        {
+            "$id": "queues",
+            "$permissions": [],
+            "databaseId": "68e57de9003234a84cae",
+            "name": "Queues",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "venueId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "nowPlaying",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 10000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "mainQueue",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 100000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "priorityQueue",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 100000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "venueId_unique",
+                    "type": "unique",
+                    "status": "available",
+                    "orders": []
+                }
+            ]
+        },
+        {
+            "$id": "players",
+            "$permissions": [],
+            "databaseId": "68e57de9003234a84cae",
+            "name": "Players",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "playerId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "venueId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "deviceId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "active",
+                        "idle",
+                        "offline"
+                    ],
+                    "format": "enum",
+                    "default": "idle"
+                },
+                {
+                    "key": "lastHeartbeat",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": -9223372036854775808,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "expiresAt",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": -9223372036854775808,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "userAgent",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 500,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "magicLinks",
+            "$permissions": [],
+            "databaseId": "68e57de9003234a84cae",
+            "name": "Magic Links",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "email",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "token",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "redirectUrl",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "format": "url",
+                    "default": null
+                },
+                {
+                    "key": "expiresAt",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": -9223372036854775808,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "used",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "playlists",
+            "$permissions": [],
+            "databaseId": "68e57de9003234a84cae",
+            "name": "Playlists",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "playlistId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "description",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "ownerId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "venueId",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "tracks",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 100000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "ownerId_key",
+                    "type": "key",
+                    "status": "available",
+                    "orders": []
+                },
+                {
+                    "key": "venueId_key",
+                    "type": "key",
+                    "status": "available",
+                    "orders": []
+                }
+            ]
+        }
+    ],
+    "teams": [
+        {
+            "$id": "DJAMMS_Venue_Managers",
+            "name": "DJAMMS_Venue_Managers"
+        }
+    ],
+    "functions": [
+        {
+            "$id": "68e5a317003c42c8bb6a",
+            "name": "magic-link",
+            "runtime": "node-18.0",
+            "specification": "s-0.5vcpu-512mb",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "scopes": [
+                "users.read"
+            ],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "path": "functions/magic-link"
+        },
+        {
+            "$id": "68e5a41f00222cab705b",
+            "name": "player-registry",
+            "runtime": "node-18.0",
+            "specification": "s-0.5vcpu-512mb",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "scopes": [
+                "users.read"
+            ],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "path": "functions/player-registry"
+        },
+        {
+            "$id": "68e5acf100104d806321",
+            "execute": [
+                "any"
+            ],
+            "name": "processRequest",
+            "enabled": true,
+            "logging": true,
+            "runtime": "node-18.0",
+            "scopes": [
+                "users.read"
+            ],
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "specification": "s-0.5vcpu-512mb",
+            "path": "functions/processRequest"
+        }
+    ]
+}
