@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:landing",
-  "outputDirectory": "apps/landing/dist",
+  "buildCommand": "npm run build:kiosk",
+  "outputDirectory": "apps/kiosk/dist",
   "installCommand": "npm install"
 }
