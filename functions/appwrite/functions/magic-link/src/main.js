@@ -4,6 +4,7 @@
 const { Client, Databases, Query } = require('node-appwrite');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { Resend } = require('resend');
 
 /**
  * Main handler for AppWrite Cloud Function
@@ -44,11 +45,106 @@ module.exports = async ({ req, res, log, error }) => {
 
       log(`Magic link created: ${token}`);
 
+      // Send email via Resend
+      const magicLink = `https://auth.djamms.app/callback?token=${token}&email=${encodeURIComponent(email)}`;
+      
+      if (process.env.RESEND_API_KEY) {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          
+          const emailHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DJAMMS Magic Link</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0a;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #1a1a1a; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+              <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: 2px;">DJAMMS</h1>
+              <p style="margin: 8px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9); letter-spacing: 1px;">MUSIC • POWERED • BY • YOU</p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px;">
+              <h2 style="margin: 0 0 16px; font-size: 24px; font-weight: 600; color: #ffffff;">Sign In to Your Account</h2>
+              <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #a3a3a3;">
+                Click the button below to securely sign in to DJAMMS. This link will expire in <strong style="color: #ffffff;">15 minutes</strong>.
+              </p>
+              
+              <!-- Button -->
+              <table role="presentation" style="margin: 32px 0; border-collapse: collapse;">
+                <tr>
+                  <td align="center">
+                    <a href="${magicLink}" style="display: inline-block; padding: 16px 48px; font-size: 16px; font-weight: 600; color: #ffffff; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); text-decoration: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); transition: all 0.3s;">
+                      Sign In to DJAMMS
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 24px 0 0; font-size: 14px; line-height: 1.6; color: #737373;">
+                Or copy and paste this URL into your browser:
+              </p>
+              <p style="margin: 8px 0; padding: 12px; font-size: 12px; color: #8b5cf6; background-color: #0a0a0a; border-radius: 6px; word-break: break-all; font-family: 'Courier New', monospace;">
+                ${magicLink}
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; border-top: 1px solid #262626; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #525252;">
+                If you didn't request this email, you can safely ignore it.
+              </p>
+              <p style="margin: 8px 0 0; font-size: 12px; color: #525252;">
+                © ${new Date().getFullYear()} DJAMMS. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+          `.trim();
+
+          const { data, error: emailError } = await resend.emails.send({
+            from: process.env.SMTP_FROM || 'DJAMMS <noreply@djamms.app>',
+            to: [email],
+            subject: 'Sign In to DJAMMS',
+            html: emailHtml
+          });
+
+          if (emailError) {
+            error(`Failed to send email: ${JSON.stringify(emailError)}`);
+          } else {
+            log(`Email sent successfully: ${data?.id}`);
+          }
+        } catch (emailErr) {
+          error(`Email sending error: ${emailErr.message}`);
+          // Don't fail the request if email fails - token is still valid
+        }
+      } else {
+        log('RESEND_API_KEY not configured - skipping email send');
+      }
+
       return res.json({
         success: true,
         message: 'Magic link created',
         token: token,
-        magicLink: `https://auth.djamms.app/callback?token=${token}&email=${encodeURIComponent(email)}`
+        magicLink: magicLink
       });
     }
 

@@ -30,6 +30,8 @@
     "schema:apply": "node scripts/schema-manager/appwrite-schema.cjs --apply",
     "schema:clean": "node scripts/schema-manager/appwrite-schema.cjs --apply --clean --confirm",
     "create-collections": "node scripts/schema-manager/appwrite-schema.cjs --create-collections --apply --confirm",
+    "playlist:create": "node scripts/create-default-playlist.mjs",
+    "playlist:verify": "node scripts/verify-default-playlist.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
     "deploy:vercel": "bash scripts/deploy-vercel.sh",
