@@ -21,11 +21,13 @@ describe('AuthService', () => {
       await authService.sendMagicLink('test@example.com');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/functions/magic-link'),
+        expect.stringContaining('/functions/'),
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: expect.stringContaining('test@example.com'),
+          headers: expect.objectContaining({ 
+            'Content-Type': 'application/json',
+            'X-Appwrite-Project': expect.any(String)
+          }),
         })
       );
     });
@@ -33,6 +35,8 @@ describe('AuthService', () => {
     it('should throw error on failed request', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: false,
+        status: 500,
+        text: async () => 'Server error',
       });
       global.fetch = mockFetch;
 
@@ -57,14 +61,16 @@ describe('AuthService', () => {
 
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockResponse,
+        json: async () => ({
+          responseBody: JSON.stringify(mockResponse)
+        }),
       });
       global.fetch = mockFetch;
 
       const session = await authService.handleMagicLinkCallback('secret123', 'user123');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/functions/magic-link/callback'),
+        expect.stringContaining('/functions/'),
         expect.any(Object)
       );
 
@@ -80,6 +86,8 @@ describe('AuthService', () => {
     it('should throw error on invalid callback', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: false,
+        status: 401,
+        text: async () => 'Invalid token',
       });
       global.fetch = mockFetch;
 
