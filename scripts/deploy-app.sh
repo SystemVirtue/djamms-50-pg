@@ -52,8 +52,15 @@ echo ""
 echo "🚀 Deploying $APP to Vercel..."
 echo ""
 
-# Deploy to Vercel
-vercel --prod --name "djamms-$APP"
+# Check if .vercel directory exists and remove it to force new project setup
+if [ -d ".vercel" ]; then
+  echo "🗑️  Removing cached .vercel directory..."
+  rm -rf .vercel
+fi
+
+# Deploy to Vercel (first deployment will prompt to create new project)
+echo "📋 Creating new project: djamms-$APP"
+vercel --prod --yes
 
 echo ""
 echo "🎉 $APP deployed successfully!"
