@@ -4,16 +4,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "env": {
-    "VITE_APPWRITE_ENDPOINT": "@vite_appwrite_endpoint",
-    "VITE_APPWRITE_PROJECT_ID": "@vite_appwrite_project_id",
-    "VITE_APPWRITE_DATABASE_ID": "@vite_appwrite_database_id",
-    "VITE_APPWRITE_FUNCTION_MAGIC_LINK": "@vite_appwrite_function_magic_link",
-    "VITE_APPWRITE_MAGIC_REDIRECT": "@vite_appwrite_magic_redirect",
-    "VITE_JWT_SECRET": "@vite_jwt_secret",
-    "VITE_APP_URL_LANDING": "@vite_app_url_landing",
-    "VITE_APP_URL_PLAYER": "@vite_app_url_player"
-  },
   "rewrites": [
     {
       "source": "/auth/:path*",

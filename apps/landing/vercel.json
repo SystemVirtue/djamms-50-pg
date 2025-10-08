@@ -3,14 +3,5 @@
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "vite",
-  "env": {
-    "VITE_APPWRITE_ENDPOINT": "@vite_appwrite_endpoint",
-    "VITE_APPWRITE_PROJECT_ID": "@vite_appwrite_project_id",
-    "VITE_APP_URL_LANDING": "@vite_app_url_landing",
-    "VITE_APP_URL_AUTH": "@vite_app_url_auth",
-    "VITE_APP_URL_PLAYER": "@vite_app_url_player",
-    "VITE_APP_URL_ADMIN": "@vite_app_url_admin",
-    "VITE_APP_URL_KIOSK": "@vite_app_url_kiosk"
-  }
+  "framework": "vite"
 }

@@ -4,16 +4,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "env": {
-    "VITE_APPWRITE_ENDPOINT": "@vite_appwrite_endpoint",
-    "VITE_APPWRITE_PROJECT_ID": "@vite_appwrite_project_id",
-    "VITE_APPWRITE_DATABASE_ID": "@vite_appwrite_database_id",
-    "VITE_APPWRITE_FUNCTION_PLAYER_REGISTRY": "@vite_appwrite_function_player_registry",
-    "VITE_JWT_SECRET": "@vite_jwt_secret",
-    "VITE_YOUTUBE_API_KEY": "@vite_youtube_api_key",
-    "VITE_APP_URL_AUTH": "@vite_app_url_auth",
-    "VITE_APP_URL_ADMIN": "@vite_app_url_admin"
-  },
   "rewrites": [
     {
       "source": "/player/:path*",
