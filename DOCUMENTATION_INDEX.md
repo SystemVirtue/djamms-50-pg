@@ -60,6 +60,7 @@ djamms-50-pg/
 | **[CALLBACK_PAGE_EXPLANATION.md](docs/architecture/CALLBACK_PAGE_EXPLANATION.md)** | Callback page behavior | Debugging auth callback |
 | **[DATABASE_SCHEMA_COMPLETE.md](docs/architecture/DATABASE_SCHEMA_COMPLETE.md)** | AppWrite database schema | Understanding data structure |
 | **[PLAYLIST_INTEGRATION_GUIDE.md](docs/architecture/PLAYLIST_INTEGRATION_GUIDE.md)** | Default playlist system | Working with playlists |
+| **[VERCEL_TO_APPWRITE_MIGRATION.md](docs/architecture/VERCEL_TO_APPWRITE_MIGRATION.md)** | Complete migration guide | Planning platform migration |
 
 ### 🔧 Troubleshooting
 
