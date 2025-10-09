@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './routes/landing/LandingPage';
 import { AuthLogin } from './routes/auth/Login';
 import { AuthCallback } from './routes/auth/Callback';
@@ -9,7 +9,7 @@ import { KioskView } from './routes/kiosk/KioskView';
 
 export function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -25,6 +25,6 @@ export function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
