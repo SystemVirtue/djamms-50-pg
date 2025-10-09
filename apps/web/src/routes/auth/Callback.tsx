@@ -15,6 +15,8 @@ export function AuthCallback() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
+  const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [isClosingSession, setIsClosingSession] = useState(false);
 
   useEffect(() => {
     const verifyMagicLink = async () => {
@@ -45,12 +47,55 @@ export function AuthCallback() {
       } catch (err: any) {
         console.error('Magic link verification error:', err);
         setStatus('error');
-        setErrorMessage(err.message || 'Failed to verify magic link. Please try again.');
+        
+        // Check if error is due to active session
+        if (err.message && err.message.includes('session is active')) {
+          setHasActiveSession(true);
+          setErrorMessage('Creation of a session is prohibited when a session is active.');
+        } else {
+          setErrorMessage(err.message || 'Failed to verify magic link. Please try again.');
+        }
       }
     };
 
     verifyMagicLink();
   }, [searchParams, navigate]);
+
+  const handleCloseSessionAndContinue = async () => {
+    setIsClosingSession(true);
+    try {
+      // Delete all active sessions
+      await account.deleteSessions();
+      console.log('All sessions closed successfully');
+
+      // Now retry the magic URL authentication
+      const userId = searchParams.get('userId');
+      const secret = searchParams.get('secret');
+
+      if (!userId || !secret) {
+        throw new Error('Missing authentication parameters.');
+      }
+
+      // Update the magic URL session to complete authentication
+      await account.updateMagicURLSession(userId, secret);
+
+      // Get the current user to verify authentication
+      const user = await account.get();
+      console.log('Authenticated user after session cleanup:', user);
+
+      setStatus('success');
+
+      // Redirect to dashboard after 1 second
+      setTimeout(() => {
+        navigate(`/dashboard/${user.$id}`);
+      }, 1000);
+
+    } catch (err: any) {
+      console.error('Error closing session and continuing:', err);
+      setIsClosingSession(false);
+      setErrorMessage(err.message || 'Failed to close session and continue. Please try again.');
+    }
+  };
 
   if (status === 'verifying') {
     return (
@@ -129,12 +174,37 @@ export function AuthCallback() {
         </svg>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Authentication Failed</h2>
         <p className="text-gray-600 mb-6">{errorMessage}</p>
-        <button
-          onClick={() => navigate('/auth')}
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all"
-        >
-          Try Again
-        </button>
+        
+        <div className="space-y-3">
+          {/* Show "Close Active Session" button if there's an active session */}
+          {hasActiveSession && (
+            <button
+              onClick={handleCloseSessionAndContinue}
+              disabled={isClosingSession}
+              className="w-full bg-red-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isClosingSession ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Closing Session...
+                </span>
+              ) : (
+                'Close Active Session & Continue'
+              )}
+            </button>
+          )}
+          
+          {/* Try Again button */}
+          <button
+            onClick={() => navigate('/auth')}
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     </div>
   );
