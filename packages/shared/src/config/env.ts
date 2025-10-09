@@ -27,7 +27,7 @@ export const config = {
   },
   auth: {
     magicLinkRedirect: import.meta.env.VITE_APPWRITE_MAGIC_REDIRECT || 
-      (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : ''),
+      (typeof window !== 'undefined' ? `${window.location.origin}/callback` : ''),
     jwtSecret: import.meta.env.VITE_JWT_SECRET || '',
     allowAutoCreate: import.meta.env.VITE_ALLOW_AUTO_CREATE_USERS === 'true',
   },
