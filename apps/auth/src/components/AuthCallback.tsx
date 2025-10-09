@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAppwrite } from '@appwrite/AppwriteContext';
 import { toast } from 'sonner';
 
 export const AuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { auth } = useAppwrite();
   const [error, setError] = useState<string>();
 
@@ -22,16 +21,19 @@ export const AuthCallback: React.FC = () => {
       .handleMagicLinkCallback(secret, userId)
       .then((session) => {
         toast.success('Logged in successfully');
-        const redirectTo = session.user.venueId
-          ? `/admin/${session.user.venueId}`
-          : '/dashboard';
-        navigate(redirectTo);
+        
+        // Redirect to dashboard with user ID
+        const dashboardUrl = import.meta.env.PROD
+          ? `https://dashboard.djamms.app/${session.user.userId}`
+          : `http://localhost:3003/${session.user.userId}`;
+        
+        window.location.href = dashboardUrl;
       })
       .catch((err) => {
         setError(err.message);
         toast.error(err.message);
       });
-  }, [searchParams, auth, navigate]);
+  }, [searchParams, auth]);
 
   if (error) {
     return (
@@ -39,12 +41,12 @@ export const AuthCallback: React.FC = () => {
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold mb-4">Authentication Error</h1>
           <p className="text-gray-300 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/auth/login')}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg transition"
+          <a
+            href={import.meta.env.PROD ? 'https://auth.djamms.app' : 'http://localhost:3002'}
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg transition"
           >
             Try Again
-          </button>
+          </a>
         </div>
       </div>
     );

@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 function App() {
+  // Use production auth URL or fallback to localhost for development
+  const authUrl = import.meta.env.PROD 
+    ? 'https://auth.djamms.app' 
+    : 'http://localhost:3002';
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 border-b border-gray-700">
@@ -12,7 +17,7 @@ function App() {
               <h1 className="text-2xl font-bold">DJAMMS</h1>
             </div>
             <div className="flex items-center gap-4">
-              <a href="http://localhost:3002/auth/login" className="hover:text-blue-400 transition">Login</a>
+              <a href={authUrl} className="hover:text-blue-400 transition">Login</a>
             </div>
           </div>
         </div>
@@ -25,10 +30,10 @@ function App() {
             Professional music queue management for bars and venues
           </p>
           <a
-            href="http://localhost:3002/auth/login"
+            href={authUrl}
             className="inline-block bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg font-medium transition"
           >
-            Get Started
+            Log in to DJAMMS
           </a>
         </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppwriteProvider } from '@appwrite/AppwriteContext';
+import { AppwriteProvider, useAppwrite } from '@appwrite/AppwriteContext';
 import { Toaster } from 'sonner';
 import { AdvancedPlayer } from './components/AdvancedPlayer';
 import './index.css';
@@ -12,26 +12,46 @@ function App() {
       <AppwriteProvider>
         <Toaster position="top-right" />
         <Routes>
-          <Route path="/player/:venueId" element={<PlayerRoute />} />
-          <Route path="/" element={<Home />} />
+          <Route path="/player/:venueId" element={<ProtectedPlayerRoute />} />
+          <Route path="/" element={<RedirectToLanding />} />
         </Routes>
       </AppwriteProvider>
     </BrowserRouter>
   );
 }
 
-function PlayerRoute() {
+function ProtectedPlayerRoute() {
+  const { session, isLoading } = useAppwrite();
   const venueId = window.location.pathname.split('/')[2];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    window.location.href = import.meta.env.PROD 
+      ? 'https://djamms.app' 
+      : 'http://localhost:3000';
+    return null;
+  }
+
   return <AdvancedPlayer venueId={venueId} />;
 }
 
-function Home() {
+function RedirectToLanding() {
+  React.useEffect(() => {
+    window.location.href = import.meta.env.PROD 
+      ? 'https://djamms.app' 
+      : 'http://localhost:3000';
+  }, []);
+  
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">DJAMMS Player</h1>
-        <p className="text-gray-400">Enter a venue ID in the URL: /player/[venueId]</p>
-      </div>
+      <div className="text-xl">Redirecting to landing page...</div>
     </div>
   );
 }

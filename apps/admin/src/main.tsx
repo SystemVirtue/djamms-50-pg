@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppwriteProvider, useAppwrite } from '@appwrite/AppwriteContext';
 import { Toaster } from 'sonner';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -13,10 +13,24 @@ function App() {
         <Toaster position="top-right" />
         <Routes>
           <Route path="/admin/:venueId" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/" element={<Navigate to="/auth/login" replace />} />
+          <Route path="/" element={<RedirectToAuth />} />
         </Routes>
       </AppwriteProvider>
     </BrowserRouter>
+  );
+}
+
+function RedirectToAuth() {
+  React.useEffect(() => {
+    window.location.href = import.meta.env.PROD 
+      ? 'https://auth.djamms.app' 
+      : 'http://localhost:3002';
+  }, []);
+  
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="text-xl">Redirecting to login...</div>
+    </div>
   );
 }
 
@@ -32,7 +46,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    window.location.href = '/auth/login';
+    window.location.href = import.meta.env.PROD 
+      ? 'https://auth.djamms.app' 
+      : 'http://localhost:3002';
     return null;
   }
 
