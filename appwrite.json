@@ -1,0 +1,35 @@
+{
+    "projectId": "68cc86c3002b27e13947",
+    "projectName": "DJAMMS",
+    "settings": {
+        "services": {
+            "account": true,
+            "avatars": true,
+            "databases": true,
+            "locale": true,
+            "health": true,
+            "storage": true,
+            "teams": true,
+            "users": true,
+            "functions": true,
+            "graphql": false,
+            "messaging": true
+        }
+    },
+    "buckets": [
+        {
+            "$id": "static-apps",
+            "name": "Static Apps Hosting",
+            "$permissions": [
+                "read(\"any\")"
+            ],
+            "fileSecurity": false,
+            "enabled": true,
+            "maximumFileSize": 30000000,
+            "allowedFileExtensions": [],
+            "compression": "gzip",
+            "encryption": false,
+            "antivirus": false
+        }
+    ]
+}

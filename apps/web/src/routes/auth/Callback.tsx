@@ -1,10 +1,140 @@
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Client, Account } from 'appwrite';
+
+// Initialize AppWrite Client
+const client = new Client();
+const account = new Account(client);
+
+client
+  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+
 export function AuthCallback() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    const verifyMagicLink = async () => {
+      try {
+        // Get the userId and secret from URL parameters
+        const userId = searchParams.get('userId');
+        const secret = searchParams.get('secret');
+
+        if (!userId || !secret) {
+          throw new Error('Missing authentication parameters. Please try logging in again.');
+        }
+
+        // Update the magic URL session to complete authentication
+        await account.updateMagicURLSession(userId, secret);
+
+        // Get the current user to verify authentication
+        const user = await account.get();
+        console.log('Authenticated user:', user);
+
+        setStatus('success');
+
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          // For now, redirect to landing page. Later we'll redirect to dashboard
+          navigate(`/dashboard/${user.$id}`);
+        }, 2000);
+
+      } catch (err: any) {
+        console.error('Magic link verification error:', err);
+        setStatus('error');
+        setErrorMessage(err.message || 'Failed to verify magic link. Please try again.');
+      }
+    };
+
+    verifyMagicLink();
+  }, [searchParams, navigate]);
+
+  if (status === 'verifying') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+          <div className="relative mb-6">
+            <svg
+              className="animate-spin h-16 w-16 text-purple-600 mx-auto"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Verifying your magic link...</h2>
+          <p className="text-gray-600">Please wait while we authenticate you.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+          <svg
+            className="w-20 h-20 text-green-500 mx-auto mb-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Successfully authenticated!</h2>
+          <p className="text-gray-600 mb-4">Redirecting you to your dashboard...</p>
+          <div className="animate-pulse text-purple-600 font-medium">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-        <div className="animate-spin text-6xl mb-4">⏳</div>
-        <h2 className="text-2xl font-bold mb-2">Verifying...</h2>
-        <p className="text-gray-600">Callback handling coming soon</p>
+        <svg
+          className="w-20 h-20 text-red-500 mx-auto mb-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Authentication Failed</h2>
+        <p className="text-gray-600 mb-6">{errorMessage}</p>
+        <button
+          onClick={() => navigate('/auth')}
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all"
+        >
+          Try Again
+        </button>
       </div>
     </div>
   );
