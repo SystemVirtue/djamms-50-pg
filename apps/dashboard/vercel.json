@@ -6,8 +6,8 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/dashboard/:path*",
-      "destination": "/dashboard/:path*"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
