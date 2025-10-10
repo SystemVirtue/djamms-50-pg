@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppwriteProvider, useAppwrite } from '@appwrite/AppwriteContext';
 import { Toaster } from 'sonner';
-import { AdvancedPlayer } from './components/AdvancedPlayer';
+import { PlayerView } from './components/PlayerView';
 import './index.css';
 
 function App() {
@@ -39,7 +39,7 @@ function ProtectedPlayerRoute() {
     return null;
   }
 
-  return <AdvancedPlayer venueId={venueId} />;
+  return <PlayerView venueId={venueId} />;
 }
 
 function RedirectToLanding() {

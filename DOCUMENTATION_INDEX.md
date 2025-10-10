@@ -2,7 +2,7 @@
 
 **Complete Navigation Guide for DJAMMS Project Documentation**
 
-**Last Updated:** October 9, 2025  
+**Last Updated:** January 9, 2025  
 **Status:** Cleaned and Organized ✅
 
 ---
@@ -12,8 +12,44 @@
 **New to the project?** Start here:
 
 1. **[README.md](./README.md)** - Project overview and quick start
-2. **[docs/setup/QUICKSTART.md](./docs/setup/QUICKSTART.md)** - 5-minute setup guide
-3. **[docs/reference/RUNNING.md](./docs/reference/RUNNING.md)** - Running development servers
+2. **[ARCHITECTURE_ANALYSIS_SUMMARY.md](./ARCHITECTURE_ANALYSIS_SUMMARY.md)** ⭐ **NEW** - Architecture analysis and next steps
+3. **[docs/setup/QUICKSTART.md](./docs/setup/QUICKSTART.md)** - 5-minute setup guide
+4. **[docs/reference/RUNNING.md](./docs/reference/RUNNING.md)** - Running development servers
+
+---
+
+## 🎯 NEW: Architecture Documentation (January 2025)
+
+**Ready to implement player/admin/kiosk?** These documents provide complete architectural understanding:
+
+1. **[ARCHITECTURE_ANALYSIS_SUMMARY.md](./ARCHITECTURE_ANALYSIS_SUMMARY.md)** ⭐ START HERE
+   - Executive summary of DJAMMS architecture
+   - Three endpoints explained (Player/Admin/Kiosk)
+   - Database schema overview
+   - Recommended development approach
+   - **Read first** (10 minutes)
+
+2. **[DJAMMS_ARCHITECTURE_COMPLETE.md](./DJAMMS_ARCHITECTURE_COMPLETE.md)** 📘 REFERENCE
+   - Comprehensive technical documentation
+   - Detailed endpoint descriptions
+   - Complete database schema
+   - State management (4-layer sync system)
+   - Queue management implementation
+   - **Deep dive** (30 minutes)
+
+3. **[DJAMMS_DEVELOPMENT_ROADMAP.md](./DJAMMS_DEVELOPMENT_ROADMAP.md)** 🗺️ IMPLEMENTATION
+   - 4-week development plan
+   - Phase 1: Player Endpoint (Week 1)
+   - Phase 2: Admin Endpoint (Week 2)
+   - Phase 3: Kiosk Endpoint (Week 3)
+   - Phase 4: Enhancement (Week 4)
+   - **Implementation guide** (30 minutes)
+
+4. **[DJAMMS_ARCHITECTURE_DIAGRAM.md](./DJAMMS_ARCHITECTURE_DIAGRAM.md)** 🎨 QUICK REFERENCE
+   - Visual diagrams and flow charts
+   - Code snippets and examples
+   - Common operations reference
+   - **Quick lookup** (5 minutes)
 
 ---
 

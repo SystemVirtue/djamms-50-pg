@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppwriteProvider, useAppwrite } from '@appwrite/AppwriteContext';
 import { Toaster } from 'sonner';
-import { AdminDashboard } from './components/AdminDashboard';
+import { AdminView } from './components/AdminView';
 import './index.css';
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
       <AppwriteProvider>
         <Toaster position="top-right" />
         <Routes>
-          <Route path="/admin/:venueId" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/:venueId" element={<ProtectedRoute><AdminView /></ProtectedRoute>} />
           <Route path="/" element={<RedirectToAuth />} />
         </Routes>
       </AppwriteProvider>
