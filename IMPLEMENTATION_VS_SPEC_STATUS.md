@@ -15,11 +15,13 @@
 | **Documentation** | ✅ Complete | 100% | All 16 I/O documents finished |
 | **Frontend Implementation** | ✅ Complete | 100% | All 6 endpoints deployed |
 | **Backend Implementation** | ⚠️ Partial | 80% | 5/5 functions exist, some untested |
-| **Test Coverage** | ⚠️ Partial | 65% | Major gaps in integration testing |
+| **Test Coverage** | ⚠️ Partial | 45% | Validated through execution (was 65% claimed) |
 | **Database Schema** | ✅ Complete | 100% | All 8 collections validated |
 | **Authentication** | ✅ Complete | 100% | Magic-link + JWT working |
 | **Real-time Sync** | ⚠️ Partial | 70% | Implemented but lacks comprehensive tests |
 | **Payment Integration** | ❌ Planned | 0% | Stripe integration pending |
+
+**Update**: Test coverage revised to 45% after systematic execution. See TEST_EXECUTION_FINAL_SUMMARY.md for details.
 
 ---
 
@@ -105,18 +107,26 @@
 
 ### Current Test Files (8 files, ~100+ tests)
 
-| Test File | Test Count | Coverage | Status |
-|-----------|------------|----------|--------|
-| **auth.spec.ts** | 3 tests | Auth flow | ✅ Basic |
-| **magic-link.spec.ts** | 4 tests | Magic-link E2E | ✅ Good |
-| **player.spec.ts** | 5 tests | Player UI | ⚠️ Basic |
-| **player-sync.spec.ts** | 19 tests | Master election + sync | ✅ Comprehensive |
-| **admin.spec.ts** | 25 tests | Admin controls + queue + settings | ✅ Comprehensive |
-| **kiosk.spec.ts** | 11 tests | Search + request | ✅ Good |
-| **endpoint-visual-tests.spec.ts** | Unknown | Visual regression | ⚠️ Limited |
-| **quick-test.spec.ts** | 1 test | Quick smoke test | ✅ Basic |
+| Test File | Test Count | Coverage | Status | Validated |
+|-----------|------------|----------|--------|-----------|
+| **landing.spec.ts** | 38 tests | Landing page | ✅ 60% passing | ✅ Executed |
+| **auth.spec.ts** | 3 tests | Auth flow | ⚠️ 33% passing | ✅ Executed |
+| **player.spec.ts** | 5 tests | Player UI | ⚠️ 20% passing | ✅ Executed |
+| **magic-link.spec.ts** | 4 tests | Magic-link E2E | ⚠️ Partial | ⏳ Not validated |
+| **player-sync.spec.ts** | 19 tests | Master election + sync | ✅ Comprehensive | ⏳ Not validated |
+| **admin.spec.ts** | 25 tests | Admin controls | ✅ Comprehensive | ⏳ Not validated |
+| **kiosk.spec.ts** | 11 tests | Search + request | ✅ Good | ⏳ Not validated |
+| **dashboard.spec.ts** | 47 tests | Dashboard UI | ⚠️ Needs fixes | ⏳ Port fixed only |
 
-**Total Test Count**: ~68 documented tests
+**Total Test Count**: ~152 tests (includes newly created suites)
+
+**Validation Status**: 46 tests executed and validated (30% of total)
+**Pass Rate**: 25 passing / 46 executed = 54% average pass rate
+
+**Key Findings** (from TEST_EXECUTION_FINAL_SUMMARY.md):
+- Universal patterns identified affecting 95% of failures
+- Fix guides created for all remaining tests
+- Estimated 3-5 hours to reach 70-80% overall pass rate
 
 ---
 
@@ -162,28 +172,35 @@
 
 #### ⚠️ **Partially Covered Areas** (30-50% coverage):
 
-1. **Dashboard Endpoint** (0 dedicated tests):
-   - ❌ Tab switching (dashboard, queue manager, playlist library, admin console)
-   - ❌ Dashboard cards (open player, switch tabs)
-   - ❌ Player status display
-   - ❌ User authentication check
-   - ❌ Logout functionality
+1. **Dashboard Endpoint** (47 tests created, 0 executed):
+   - ⏳ Tab switching (dashboard, queue manager, playlist library, admin console)
+   - ⏳ Dashboard cards (open player, switch tabs)
+   - ⏳ Player status display
+   - ⏳ User authentication check
+   - ⏳ Logout functionality
+   - **Status**: Port fixed (3003→3005), auth mocking needed
+   - **Next**: Apply universal patterns from TEST_FIX_GUIDE.md
 
-2. **Landing Page** (0 tests):
-   - ❌ Feature card display
-   - ❌ Navigation to auth
-   - ❌ Environment-based URL routing
+2. **Landing Page** (38 tests, 60% passing):
+   - ✅ Feature card display (fixed)
+   - ✅ Navigation to auth (fixed)
+   - ✅ Page structure (validated)
+   - ❌ Meta tags/SEO (missing features)
+   - ❌ Footer (missing features)
+   - ❌ Advanced accessibility (missing features)
+   - **Status**: Universal patterns validated, remaining failures are legitimate
 
 3. **State Management** (implicit coverage only):
    - ⚠️ React useState/useEffect (covered indirectly in component tests)
    - ❌ No dedicated state management tests
    - ❌ No context provider tests
 
-4. **Real-time Sync** (partial coverage):
+4. **Real-time Sync** (40 tests created, not validated):
    - ✅ Queue updates (covered in player-sync.spec.ts)
-   - ❌ No dedicated AppWrite Realtime subscription tests
+   - ❌ No validated AppWrite Realtime subscription tests
    - ❌ No reconnection failure tests
    - ❌ No subscription cleanup tests
+   - **Status**: Tests exist but need validation against running system
 
 ---
 
@@ -227,19 +244,26 @@
 
 #### 🔴 **HIGH PRIORITY** (Must implement for production):
 
-1. **Dashboard Endpoint Testing** (0 tests):
+1. **Dashboard Endpoint Testing** (47 tests created, port fixed, pending execution):
    ```typescript
-   // Missing tests:
+   // Tests ready for execution (port 3003→3005 fixed):
    - Tab navigation system (4 tabs)
    - Dashboard card actions (open player window, switch tabs)
    - Player status monitoring (connected/disconnected, playing/paused/idle)
    - User authentication flow
    - Logout and session cleanup
+   
+   // Status: Auth mocking needed, then apply TEST_FIX_GUIDE.md patterns
+   // Expected pass rate: 50-60% after universal fixes
    ```
 
-2. **Cloud Function Unit Tests**:
+2. **Cloud Function Unit Tests** (partially tested):
    ```typescript
-   // Missing tests:
+   // Tested via E2E (indirect coverage):
+   - magic-link: Tested in auth.spec.ts (33% passing)
+   - player-registry: Tested in player-sync.spec.ts (not validated)
+   
+   // Missing direct unit tests:
    - processRequest: Business rule validation
      * Max 5-minute duration enforcement
      * 3 requests per artist per 30 minutes
@@ -254,6 +278,8 @@
      * Cron execution
      * Batch processing logic
      * Failure recovery
+   
+   // Note: E2E tests provide functional validation; unit tests needed for edge cases
    ```
 
 3. **Real-time Synchronization Tests**:
@@ -510,25 +536,32 @@
 
 ### Current State:
 
-| Category | Tests | Coverage | Status |
-|----------|-------|----------|--------|
-| **E2E Tests** | ~68 | 65% | ⚠️ Partial |
-| **Unit Tests** | 0 | 0% | ❌ None |
-| **Integration Tests** | 0 | 0% | ❌ None |
-| **Performance Tests** | 0 | 0% | ❌ None |
-| **Accessibility Tests** | 0 | 0% | ❌ None |
+| Category | Tests | Validated | Coverage | Status |
+|----------|-------|-----------|----------|--------|
+| **E2E Tests** | ~152 | 46 executed | 45% validated | ⚠️ Partial |
+| **Unit Tests** | 0 | 0 | 0% | ❌ None |
+| **Integration Tests** | 0 | 0 | 0% | ❌ None |
+| **Performance Tests** | 0 | 0 | 0% | ❌ None |
+| **Accessibility Tests** | 0 | 0 | 0% | ❌ None |
 
-### Well-Tested:
-- ✅ Player endpoint (master election, sync, playback)
-- ✅ Admin endpoint (controls, queue, settings)
-- ✅ Kiosk endpoint (search, requests)
-- ✅ Authentication (magic-link flow)
+**Validation Notes**:
+- 46/152 tests executed (30%)
+- 25/46 passing (54% pass rate)
+- 6 universal patterns identified (see TEST_FIX_GUIDE.md)
+- Estimated 70-80% achievable with documented fixes
+
+### Well-Tested (Validated Through Execution):
+- ✅ Landing page (60% passing, 38 tests) - Validated ✓
+- ⚠️ Player endpoint (20% passing, 5 tests executed) - Needs work
+- ⚠️ Authentication (33% passing, 3 tests) - Partial validation
+- ⏳ Admin endpoint (25 tests ready) - Not yet executed
+- ⏳ Kiosk endpoint (11 tests ready) - Not yet executed
 
 ### Needs Testing:
-- ⚠️ Dashboard endpoint (0 tests)
-- ⚠️ Landing page (0 tests)
-- ⚠️ Cloud functions (minimal tests)
-- ⚠️ Real-time sync edge cases
+- ⚠️ Dashboard endpoint (47 tests, port fixed only)
+- ⚠️ Player endpoint (additional 19 tests in player-sync.spec.ts)
+- ⚠️ Cloud functions (minimal direct tests)
+- ⚠️ Real-time sync edge cases (40 tests created, not validated)
 - ⚠️ Database CRUD operations
 - ⚠️ Error handling and recovery
 
