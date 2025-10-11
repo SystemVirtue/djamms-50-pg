@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
   test('should display login form', async ({ page }) => {
-    await page.goto('http://localhost:3002/auth/login');
+    await page.goto('http://localhost:3002/login');
     
-    await expect(page.locator('h1')).toContainText('DJAMMS');
+    await expect(page.getByRole('heading', { name: 'DJAMMS' })).toBeVisible();
     await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toContainText('Send Magic Link');
+    await expect(page.getByRole('button', { name: /Send Magic Link/i })).toBeVisible();
   });
 
   test('should handle magic link callback', async ({ page }) => {
@@ -29,16 +29,16 @@ test.describe('Authentication Flow', () => {
       });
     });
 
-    await page.goto('http://localhost:3002/auth/callback?userId=123&secret=test-secret');
+    await page.goto('http://localhost:3002/callback?userId=123&secret=test-secret');
 
     // Should redirect to admin
     await expect(page).toHaveURL(/\/admin\/venue1/, { timeout: 10000 });
   });
 
   test('should show error for invalid magic link', async ({ page }) => {
-    await page.goto('http://localhost:3002/auth/callback');
+    await page.goto('http://localhost:3002/callback');
 
-    await expect(page.locator('text=Invalid magic link')).toBeVisible();
-    await expect(page.locator('text=Try Again')).toBeVisible();
+    await expect(page.locator('text=Invalid magic link').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Try Again/i })).toBeVisible();
   });
 });
