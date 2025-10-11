@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Dashboard Endpoint - Comprehensive Coverage', () => {
   const testUserId = 'test-user-123';
-  const dashboardUrl = `http://localhost:3003/${testUserId}`;
+  const dashboardUrl = `http://localhost:3005/${testUserId}`;
 
   test.beforeEach(async ({ page }) => {
     // Mock authentication
