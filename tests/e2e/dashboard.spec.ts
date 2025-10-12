@@ -5,19 +5,58 @@ test.describe('Dashboard Endpoint - Comprehensive Coverage', () => {
   const dashboardUrl = `http://localhost:3005/${testUserId}`;
 
   test.beforeEach(async ({ page }) => {
-    // Mock authentication
-    await page.goto(dashboardUrl);
-    await page.evaluate(() => {
-      localStorage.setItem('djamms_session', JSON.stringify({
-        token: 'mock-jwt-token',
-        user: {
-          $id: 'test-user-123',
-          email: 'test@djamms.app',
-          role: 'admin'
-        }
+    // CRITICAL: Prevent window.location redirects by overriding it
+    await page.addInitScript(() => {
+      // Mock localStorage with auth data
+      localStorage.setItem('authToken', 'mock-jwt-token-12345');
+      localStorage.setItem('userData', JSON.stringify({
+        $id: 'test-user-123',
+        email: 'test@djamms.app',
+        name: 'Test User',
+        emailVerification: true
       }));
+
+      // Override window.location.href to prevent redirects during testing
+      Object.defineProperty(window.location, 'href', {
+        set: function(url) {
+          console.log('Redirect blocked:', url);
+        },
+        get: function() {
+          return window.location.toString();
+        }
+      });
     });
-    await page.reload();
+
+    // Mock auth verification endpoint (called by getCurrentSession)
+    await page.route('**/functions/auth/verify', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          valid: true,
+          user: {
+            $id: testUserId,
+            email: 'test@djamms.app',
+            name: 'Test User'
+          }
+        })
+      });
+    });
+
+    // Mock player status endpoint
+    await page.route('**/databases/*/collections/players/documents*', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          documents: [],
+          total: 0
+        })
+      });
+    });
+
+    // Navigate without waiting for full load (redirect is blocked anyway)
+    await page.goto(dashboardUrl, { waitUntil: 'domcontentloaded' });
   });
 
   test.describe('Tab Navigation System', () => {

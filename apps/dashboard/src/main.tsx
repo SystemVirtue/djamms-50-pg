@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppwriteProvider, useAppwrite } from '@appwrite/AppwriteContext';
 import { 
   Home, Settings, ListMusic, Library, Play,
@@ -541,25 +541,49 @@ function ProtectedDashboard() {
   }
 
   if (!session) {
-    window.location.href = import.meta.env.PROD 
-      ? 'https://auth.djamms.app' 
-      : 'http://localhost:3002';
-    return null;
+    // Show authentication required message
+    // The user should have been authenticated before reaching this app
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center" data-testid="auth-required">
+        <div className="text-center max-w-md p-8">
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
+          <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
+          <p className="text-gray-300 mb-6">
+            You need to be logged in to access the dashboard.
+          </p>
+          <a 
+            href={import.meta.env.PROD ? 'https://auth.djamms.app' : 'http://localhost:3002'}
+            className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+          >
+            Go to Login
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return <DashboardView user={session.user} />;
 }
 
 function RedirectToAuth() {
-  React.useEffect(() => {
-    window.location.href = import.meta.env.PROD 
-      ? 'https://auth.djamms.app' 
-      : 'http://localhost:3002';
-  }, []);
+  const authUrl = import.meta.env.PROD 
+    ? 'https://auth.djamms.app' 
+    : 'http://localhost:3002';
   
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-xl">Redirecting to login...</div>
+      <div className="text-center max-w-md p-8">
+        <h1 className="text-2xl font-bold mb-4">Please Log In</h1>
+        <p className="text-gray-300 mb-6">
+          Access the dashboard by logging in first.
+        </p>
+        <a 
+          href={authUrl}
+          className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+        >
+          Go to Login
+        </a>
+      </div>
     </div>
   );
 }
