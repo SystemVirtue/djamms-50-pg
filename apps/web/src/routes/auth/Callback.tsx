@@ -21,6 +21,22 @@ export function AuthCallback() {
   useEffect(() => {
     const verifyMagicLink = async () => {
       try {
+        // FIRST: Check if user already has an active session
+        try {
+          const existingUser = await account.get();
+          if (existingUser) {
+            console.log('User already authenticated, redirecting to dashboard:', existingUser);
+            setStatus('success');
+            setTimeout(() => {
+              navigate(`/dashboard/${existingUser.$id}`);
+            }, 1000);
+            return; // Exit early - user is already logged in
+          }
+        } catch (existingSessionError) {
+          // No existing session, continue with magic link verification
+          console.log('No existing session, proceeding with magic link verification');
+        }
+
         // Get the userId and secret from URL parameters
         const userId = searchParams.get('userId');
         const secret = searchParams.get('secret');
@@ -40,7 +56,6 @@ export function AuthCallback() {
 
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
-          // For now, redirect to landing page. Later we'll redirect to dashboard
           navigate(`/dashboard/${user.$id}`);
         }, 2000);
 

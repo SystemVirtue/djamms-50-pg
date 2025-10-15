@@ -201,22 +201,7 @@ export function PlayerView() {
         </div>
       </div>
 
-      {/* Implementation Note */}
-      <div className="absolute top-4 right-4 max-w-md">
-        <div className="p-4 bg-blue-900/80 backdrop-blur border border-blue-600/50 rounded-lg">
-          <p className="text-blue-200 text-sm">
-            <strong>✅ Simplified Implementation</strong>
-          </p>
-          <p className="text-blue-200/80 text-xs mt-2">
-            This is a simplified version. Full implementation with dual YouTube iframes,
-            crossfading, and master player logic is available in{' '}
-            <code className="bg-black/30 px-1 py-0.5 rounded">apps/player/</code>
-          </p>
-          <p className="text-blue-200/70 text-xs mt-2">
-            Install: <code className="bg-black/30 px-1 py-0.5 rounded">npm install react-youtube</code>
-          </p>
-        </div>
-      </div>
+      {/* Implementation Note - REMOVED */}
     </div>
   );
 }

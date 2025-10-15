@@ -231,20 +231,18 @@ export function KioskView() {
           </div>
         ) : null}
 
-        {/* Implementation Note */}
-        <div className="mt-8 p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
-          <p className="text-blue-200 text-sm">
-            <strong>✅ Simplified Implementation</strong>
-          </p>
-          <p className="text-blue-200/80 text-xs mt-2">
-            This is a simplified version with mock search results. Full implementation with YouTube API,
-            Stripe payments, virtual keyboard, and real-time sync is available in{' '}
-            <code className="bg-black/30 px-1 py-0.5 rounded">apps/kiosk/</code>
-          </p>
-          <p className="text-blue-200/70 text-xs mt-2">
-            To enable YouTube search: Add <code className="bg-black/30 px-1 py-0.5 rounded">VITE_YOUTUBE_API_KEY</code> to .env
-          </p>
-        </div>
+        {/* Implementation Note - REMOVED */}
+        {!import.meta.env.VITE_YOUTUBE_API_KEY && (
+          <div className="mt-8 p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+            <p className="text-yellow-200 text-sm">
+              <strong>⚠️ YouTube API Key Required</strong>
+            </p>
+            <p className="text-yellow-200/80 text-xs mt-2">
+              To enable real YouTube search, add <code className="bg-black/30 px-1 py-0.5 rounded">VITE_YOUTUBE_API_KEY</code> to your environment variables.
+              Currently showing mock results.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

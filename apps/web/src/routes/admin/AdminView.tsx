@@ -222,17 +222,7 @@ export function AdminView() {
           </div>
         </div>
 
-        {/* Implementation Note */}
-        <div className="p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
-          <p className="text-blue-200 text-sm">
-            <strong>✅ Simplified Implementation</strong>
-          </p>
-          <p className="text-blue-200/80 text-xs mt-2">
-            This is a simplified version using localStorage. Full implementation with real-time AppWrite
-            subscriptions, database sync, and advanced queue management is available in{' '}
-            <code className="bg-black/30 px-1 py-0.5 rounded">apps/admin/</code>
-          </p>
-        </div>
+        {/* Implementation Note - REMOVED */}
       </div>
     </div>
   );
