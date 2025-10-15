@@ -4,6 +4,11 @@ export type { YouTubeSearchOptions, YouTubeSearchResponse } from './YouTubeSearc
 export { QueueService } from './QueueService';
 export type { QueueDocument } from './QueueService';
 
+export { QueueManagementService } from './QueueManagementService';
+export type { QueueTrack, AddTrackOptions } from './QueueManagementService';
+
+export { PlayerQueueSyncService } from './PlayerQueueSyncService';
+
 export { PlayerService } from './PlayerService';
 
 export { PlayerSyncService } from './PlayerSyncService';

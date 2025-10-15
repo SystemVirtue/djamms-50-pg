@@ -14,6 +14,18 @@ export type {
   UseQueueSyncReturn
 } from './useQueueSync';
 
+export { useQueueManagement } from './useQueueManagement';
+export type {
+  UseQueueManagementOptions,
+  UseQueueManagementReturn
+} from './useQueueManagement';
+
+export { usePlayerWithSync } from './usePlayerWithSync';
+export type {
+  UsePlayerWithSyncOptions,
+  UsePlayerWithSyncReturn
+} from './usePlayerWithSync';
+
 export { usePlayerManager } from './usePlayerManager';
 export type {
   UsePlayerManagerOptions,

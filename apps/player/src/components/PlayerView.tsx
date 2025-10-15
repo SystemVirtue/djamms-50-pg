@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppwrite } from '@appwrite/AppwriteContext';
-import { usePlayerManager } from '@shared/hooks';
+import { usePlayerWithSync } from '@shared/hooks';
 import { YouTubePlayer, BackgroundSlideshow } from '@shared/components';
 import { PlayerBusyScreen } from './PlayerBusyScreen';
 import { Volume2, VolumeX, Play, Pause, SkipForward } from 'lucide-react';
@@ -11,32 +11,33 @@ interface PlayerViewProps {
 
 export function PlayerView({ venueId }: PlayerViewProps) {
   const { client } = useAppwrite();
+  
+  // Check if this player is master (simplified - in production, use master election)
+  const isMasterPlayer = true; // TODO: Implement proper master election
+  
   const {
-    playerState,
-    isMaster,
     currentTrack,
+    priorityQueue,
+    mainQueue,
     isLoading,
     error,
-    playNextTrack,
-    retryConnection,
-    volume,
-    setVolume,
-    isPlaying,
-    setIsPlaying,
-  } = usePlayerManager({
+    handleTrackEnd,
+    skipTrack,
+    queueStats,
+    syncNow,
+    localNowPlaying,
+  } = usePlayerWithSync({
     venueId,
-    databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main-db',
     client,
+    isMasterPlayer,
+    enableBidirectionalSync: true,
     onError: (err: string) => console.error('Player error:', err),
-    onMasterStatusChange: (master: boolean) => {
-      console.log(`Master status changed: ${master}`);
-      localStorage.setItem(`isMasterPlayer_${venueId}`, master.toString());
-    },
-    enableStateSync: true,
   });
 
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [volume, setVolume] = useState(100);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   // Loading state
   if (isLoading) {
@@ -50,13 +51,13 @@ export function PlayerView({ venueId }: PlayerViewProps) {
     );
   }
 
-  // Not master - show busy screen
-  if (isMaster === false || error) {
+  // Error state
+  if (error) {
     return (
       <PlayerBusyScreen
         venueId={venueId}
-        error={error || undefined}
-        onRetry={retryConnection}
+        error={error.message || 'Unknown error'}
+        onRetry={() => syncNow()}
         onOpenViewer={() => (window.location.href = `https://viewer.djamms.app/${venueId}`)}
         onOpenAdmin={() => (window.location.href = `https://admin.djamms.app/${venueId}`)}
       />
@@ -64,10 +65,7 @@ export function PlayerView({ venueId }: PlayerViewProps) {
   }
 
   // Combine priority and main queues for slideshow
-  const allTracks = [
-    ...(playerState?.priorityQueue || []),
-    ...(playerState?.mainQueue || []),
-  ];
+  const allTracks = [...priorityQueue, ...mainQueue];
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseInt(e.target.value, 10);
@@ -81,9 +79,21 @@ export function PlayerView({ venueId }: PlayerViewProps) {
     setIsMuted(!isMuted);
   };
 
-  const handleSkip = () => {
-    playNextTrack();
+  const handleSkip = async () => {
+    await skipTrack();
   };
+
+  // Convert QueueTrack to Track format for components
+  const convertToTrack = (track: typeof currentTrack) => {
+    if (!track) return null;
+    return {
+      ...track,
+      isRequest: track.isPaid || false,
+    };
+  };
+
+  const displayTrack = convertToTrack(currentTrack);
+  const displayTracks = allTracks.map(t => ({ ...t, isRequest: t.isPaid || false }));
 
   return (
     <div
@@ -94,15 +104,15 @@ export function PlayerView({ venueId }: PlayerViewProps) {
       {/* Background slideshow when no track is playing */}
       {!currentTrack && (
         <div className="absolute inset-0">
-          <BackgroundSlideshow tracks={allTracks} className="w-full h-full" />
+          <BackgroundSlideshow tracks={displayTracks} className="w-full h-full" />
         </div>
       )}
 
       {/* YouTube player */}
-      {currentTrack && (
+      {currentTrack && displayTrack && (
         <YouTubePlayer
-          track={currentTrack}
-          onEnded={playNextTrack}
+          track={displayTrack}
+          onEnded={handleTrackEnd}
           onError={(err: string) => console.error('YouTube player error:', err)}
           autoplay={isPlaying}
           volume={isMuted ? 0 : volume}
@@ -121,9 +131,9 @@ export function PlayerView({ venueId }: PlayerViewProps) {
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-white mb-2">{currentTrack.title}</h2>
             <p className="text-xl text-white/80">{currentTrack.artist}</p>
-            {currentTrack.isRequest && (
+            {currentTrack.isPaid && (
               <span className="inline-block mt-2 px-3 py-1 bg-orange-500 text-white text-sm rounded-full">
-                💿 Requested
+                💿 Paid Request
               </span>
             )}
           </div>
@@ -147,7 +157,7 @@ export function PlayerView({ venueId }: PlayerViewProps) {
                   <div className="text-white font-medium truncate text-sm">{track.title}</div>
                   <div className="text-white/60 text-xs truncate">{track.artist}</div>
                 </div>
-                {track.isRequest && (
+                {track.isPaid && (
                   <div className="flex-shrink-0 w-2 h-2 bg-orange-500 rounded-full" />
                 )}
               </div>
@@ -206,7 +216,7 @@ export function PlayerView({ venueId }: PlayerViewProps) {
           <div className="text-right">
             <div className="text-white/70 text-sm">Queue</div>
             <div className="text-white font-bold text-lg">
-              {playerState?.priorityQueue.length || 0} + {playerState?.mainQueue.length || 0}
+              {queueStats.priorityCount} + {queueStats.mainCount}
             </div>
           </div>
         </div>
