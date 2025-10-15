@@ -37,3 +37,9 @@ export type {
   UsePlaylistManagementConfig,
   UsePlaylistManagementReturn
 } from './usePlaylistManagement';
+
+export { useYouTubeSearch, useDebouncedYouTubeSearch } from './useYouTubeSearch';
+export type {
+  UseYouTubeSearchConfig,
+  UseYouTubeSearchReturn
+} from './useYouTubeSearch';

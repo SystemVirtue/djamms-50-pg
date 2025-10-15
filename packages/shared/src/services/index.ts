@@ -1,6 +1,14 @@
 export { YouTubeSearchService } from './YouTubeSearchService';
 export type { YouTubeSearchOptions, YouTubeSearchResponse } from './YouTubeSearchService';
 
+export { EnhancedYouTubeSearchService } from './EnhancedYouTubeSearchService';
+export type { 
+  YouTubeSearchResult, 
+  QuotaUsage, 
+  ApiKeyConfig, 
+  SearchMethod 
+} from './EnhancedYouTubeSearchService';
+
 export { QueueService } from './QueueService';
 export type { QueueDocument } from './QueueService';
 
