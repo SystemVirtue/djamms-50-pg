@@ -77,6 +77,9 @@ export function AuthCallback() {
 
   const checkAndSetupUserProfile = async (authUserId: string) => {
     try {
+      // Get user email from auth
+      const user = await account.get();
+      
       // Call Cloud Function to check/setup user profile
       const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_SETUP_USER_PROFILE;
       
@@ -85,7 +88,10 @@ export function AuthCallback() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: authUserId })
+        body: JSON.stringify({ 
+          userId: authUserId,
+          email: user.email // Include email for venue-centric schema
+        })
       });
 
       const data = await response.json();
@@ -95,10 +101,10 @@ export function AuthCallback() {
           // New user - show venue setup
           setStatus('setup');
         } else {
-          // Existing user - redirect to dashboard
+          // Existing user - redirect to their venue dashboard
           setStatus('success');
           setTimeout(() => {
-            navigate(`/dashboard/${authUserId}`);
+            navigate(`/dashboard/${data.venueId}`); // Use venueId from response
           }, 2000);
         }
       } else {
@@ -120,6 +126,9 @@ export function AuthCallback() {
     try {
       setStatus('verifying');
 
+      // Get user email from auth
+      const user = await account.get();
+
       // Call Cloud Function with venueId to complete setup
       const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_SETUP_USER_PROFILE;
       
@@ -130,23 +139,24 @@ export function AuthCallback() {
         },
         body: JSON.stringify({ 
           userId: userId,
+          email: user.email, // Include email for venue-centric schema
           venueId: venueId.trim()
         })
       });
 
       const data = await response.json();
 
-      if (data.success && data.profileCreated) {
-        // Profile created - redirect to dashboard
+      if (data.success && data.venueCreated) {
+        // Venue created - redirect to venue dashboard
         setStatus('success');
         setTimeout(() => {
-          navigate(`/dashboard/${userId}`);
+          navigate(`/dashboard/${data.venueId}`); // Use venueId from response
         }, 1500);
       } else if (data.error === 'VENUE_ID_EXISTS') {
         alert('This Venue ID is already taken. Please choose another one.');
         setStatus('setup');
       } else {
-        throw new Error(data.message || 'Failed to create profile');
+        throw new Error(data.message || 'Failed to create venue');
       }
     } catch (err: any) {
       console.error('Venue setup error:', err);
