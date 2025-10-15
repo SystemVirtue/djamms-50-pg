@@ -240,7 +240,7 @@ async function migrateVenues(backup) {
       // Update venue document
       if (!DRY_RUN) {
         const updateData = {
-          users: venueUsers,
+          users: JSON.stringify(venueUsers),  // Convert array to JSON string
         };
         
         // Remove old staffIds field
@@ -337,7 +337,16 @@ async function verifyMigration() {
     
     let venuesWithUsers = 0;
     for (const venue of venues.documents) {
-      if (venue.users && Array.isArray(venue.users) && venue.users.length > 0) {
+      // Parse JSON string to check if users array exists
+      let usersArray = [];
+      try {
+        usersArray = venue.users ? JSON.parse(venue.users) : [];
+      } catch (e) {
+        // If not JSON, check if it's already an array (shouldn't happen)
+        usersArray = Array.isArray(venue.users) ? venue.users : [];
+      }
+      
+      if (usersArray.length > 0) {
         venuesWithUsers++;
       }
     }

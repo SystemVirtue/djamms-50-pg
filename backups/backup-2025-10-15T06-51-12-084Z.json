@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-10-15T06:51:12.082Z",
+  "database": {
+    "id": "68e57de9003234a84cae",
+    "endpoint": "https://syd.cloud.appwrite.io/v1"
+  },
+  "collections": {
+    "venues": [
+      {
+        "venueId": "Demo",
+        "name": "Demo_Venue",
+        "slug": "Demo_Venue",
+        "ownerId": "Demo_User",
+        "activePlayerInstanceId": null,
+        "createdAt": "2025-10-16T06:05:33.410+00:00",
+        "users": "admin@djamms.app",
+        "$id": "68ef1d9000161e34a145",
+        "$sequence": 1,
+        "$createdAt": "2025-10-15T04:05:38.805+00:00",
+        "$updatedAt": "2025-10-15T06:49:38.174+00:00",
+        "$permissions": [],
+        "$databaseId": "68e57de9003234a84cae",
+        "$collectionId": "venues"
+      }
+    ],
+    "users": [
+      {
+        "userId": "user_1759881678283",
+        "email": "test@djamms.app",
+        "role": "staff",
+        "autoplay": true,
+        "venueId": null,
+        "createdAt": "2025-10-08T00:01:18.283+00:00",
+        "updatedAt": "2025-10-08T00:56:51.174+00:00",
+        "avatar_url": null,
+        "$id": "68e5a9ce50c6ec7707be",
+        "$sequence": 1,
+        "$createdAt": "2025-10-08T00:01:18.331+00:00",
+        "$updatedAt": "2025-10-15T06:47:19.366+00:00",
+        "$permissions": [],
+        "$databaseId": "68e57de9003234a84cae",
+        "$collectionId": "users"
+      },
+      {
+        "userId": "user_1759958261658",
+        "email": "test@example.com",
+        "role": "staff",
+        "autoplay": true,
+        "venueId": null,
+        "createdAt": "2025-10-08T21:17:41.658+00:00",
+        "updatedAt": "2025-10-08T21:17:41.658+00:00",
+        "avatar_url": null,
+        "$id": "68e6d4f5a50c3dfb16bb",
+        "$sequence": 2,
+        "$createdAt": "2025-10-08T21:17:41.676+00:00",
+        "$updatedAt": "2025-10-15T06:47:19.447+00:00",
+        "$permissions": [],
+        "$databaseId": "68e57de9003234a84cae",
+        "$collectionId": "users"
+      },
+      {
+        "userId": "user_1759958423215",
+        "email": "test-1759958422458@example.com",
+        "role": "staff",
+        "autoplay": true,
+        "venueId": null,
+        "createdAt": "2025-10-08T21:20:23.215+00:00",
+        "updatedAt": "2025-10-08T21:20:23.215+00:00",
+        "avatar_url": null,
+        "$id": "68e6d5973954d886e1e6",
+        "$sequence": 3,
+        "$createdAt": "2025-10-08T21:20:23.235+00:00",
+        "$updatedAt": "2025-10-15T06:47:19.543+00:00",
+        "$permissions": [],
+        "$databaseId": "68e57de9003234a84cae",
+        "$collectionId": "users"
+      },
+      {
+        "userId": "user_1759959522047",
+        "email": "test-1759959521629@example.com",
+        "role": "staff",
+        "autoplay": true,
+        "venueId": null,
+        "createdAt": "2025-10-08T21:38:42.047+00:00",
+        "updatedAt": "2025-10-08T21:38:42.047+00:00",
+        "avatar_url": null,
+        "$id": "68e6d9e2100bdb2bcace",
+        "$sequence": 4,
+        "$createdAt": "2025-10-08T21:38:42.066+00:00",
+        "$updatedAt": "2025-10-15T06:47:19.638+00:00",
+        "$permissions": [],
+        "$databaseId": "68e57de9003234a84cae",
+        "$collectionId": "users"
+      }
+    ]
+  },
+  "statistics": {
+    "venueCount": 1,
+    "userCount": 4
+  }
+}
