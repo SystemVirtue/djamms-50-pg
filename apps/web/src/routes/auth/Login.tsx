@@ -1,9 +1,8 @@
 import { useState, FormEvent } from 'react';
-import { Client, Account } from 'appwrite';
+import { Client } from 'appwrite';
 
 // Initialize AppWrite Client
 const client = new Client();
-const account = new Account(client);
 
 client
   .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
@@ -22,22 +21,39 @@ export function AuthLogin() {
     setSuccess(false);
 
     try {
-      // Get the redirect URL from environment or construct it
-      const redirectUrl = import.meta.env.VITE_APPWRITE_MAGIC_REDIRECT || 
-                         `${window.location.origin}/auth/callback`;
+      // Call our custom Cloud Function to validate user exists before sending magic link
+      const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_VALIDATE_MAGIC_LINK;
+      
+      const response = await fetch(functionEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
 
-      // Create Magic URL session
-      await account.createMagicURLToken(
-        'unique()', // ID will be auto-generated
-        email,
-        redirectUrl
-      );
+      const data = await response.json();
 
+      if (!response.ok || !data.success) {
+        // Handle specific error cases
+        if (data.error === 'USER_NOT_REGISTERED') {
+          // Show popup for unregistered user
+          alert('Email is not registered - please enter a valid email address!');
+          setError('This email is not registered. Please contact your administrator.');
+        } else if (data.error === 'RATE_LIMIT') {
+          setError('Too many attempts. Please try again in a few minutes.');
+        } else {
+          setError(data.message || 'Failed to send magic link. Please try again.');
+        }
+        return;
+      }
+
+      // Success - magic link sent
       setSuccess(true);
       setEmail('');
     } catch (err: any) {
       console.error('Magic link error:', err);
-      setError(err.message || 'Failed to send magic link. Please try again.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

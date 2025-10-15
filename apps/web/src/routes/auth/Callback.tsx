@@ -13,10 +13,13 @@ client
 export function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+  const [status, setStatus] = useState<'verifying' | 'setup' | 'success' | 'error'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [isClosingSession, setIsClosingSession] = useState(false);
+  const [showVenueSetup, setShowVenueSetup] = useState(false);
+  const [venueId, setVenueId] = useState('');
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
     const verifyMagicLink = async () => {
@@ -38,26 +41,23 @@ export function AuthCallback() {
         }
 
         // Get the userId and secret from URL parameters
-        const userId = searchParams.get('userId');
+        const authUserId = searchParams.get('userId');
         const secret = searchParams.get('secret');
 
-        if (!userId || !secret) {
+        if (!authUserId || !secret) {
           throw new Error('Missing authentication parameters. Please try logging in again.');
         }
 
         // Update the magic URL session to complete authentication
-        await account.updateMagicURLSession(userId, secret);
+        await account.updateMagicURLSession(authUserId, secret);
 
         // Get the current user to verify authentication
         const user = await account.get();
         console.log('Authenticated user:', user);
+        setUserId(user.$id);
 
-        setStatus('success');
-
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          navigate(`/dashboard/${user.$id}`);
-        }, 2000);
+        // Check if this is a new user (needs profile setup)
+        await checkAndSetupUserProfile(user.$id);
 
       } catch (err: any) {
         console.error('Magic link verification error:', err);
@@ -75,6 +75,87 @@ export function AuthCallback() {
 
     verifyMagicLink();
   }, [searchParams, navigate]);
+
+  const checkAndSetupUserProfile = async (authUserId: string) => {
+    try {
+      // Call Cloud Function to check/setup user profile
+      const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_SETUP_USER_PROFILE;
+      
+      const response = await fetch(functionEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: authUserId })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        if (data.requiresVenueSetup) {
+          // New user - show venue setup
+          setShowVenueSetup(true);
+          setStatus('setup');
+        } else {
+          // Existing user - redirect to dashboard
+          setStatus('success');
+          setTimeout(() => {
+            navigate(`/dashboard/${authUserId}`);
+          }, 2000);
+        }
+      } else {
+        throw new Error(data.message || 'Failed to setup user profile');
+      }
+    } catch (err: any) {
+      console.error('Profile setup error:', err);
+      setStatus('error');
+      setErrorMessage('Failed to setup user profile. Please try again.');
+    }
+  };
+
+  const handleVenueSetup = async () => {
+    if (!venueId || venueId.trim().length === 0) {
+      alert('Please enter a Venue ID');
+      return;
+    }
+
+    try {
+      setStatus('verifying');
+
+      // Call Cloud Function with venueId to complete setup
+      const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_SETUP_USER_PROFILE;
+      
+      const response = await fetch(functionEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          userId: userId,
+          venueId: venueId.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.profileCreated) {
+        // Profile created - redirect to dashboard
+        setStatus('success');
+        setTimeout(() => {
+          navigate(`/dashboard/${userId}`);
+        }, 1500);
+      } else if (data.error === 'VENUE_ID_EXISTS') {
+        alert('This Venue ID is already taken. Please choose another one.');
+        setStatus('setup');
+      } else {
+        throw new Error(data.message || 'Failed to create profile');
+      }
+    } catch (err: any) {
+      console.error('Venue setup error:', err);
+      alert('Failed to setup venue. Please try again.');
+      setStatus('setup');
+    }
+  };
 
   const handleCloseSessionAndContinue = async () => {
     setIsClosingSession(true);
@@ -111,6 +192,63 @@ export function AuthCallback() {
       setErrorMessage(err.message || 'Failed to close session and continue. Please try again.');
     }
   };
+
+  if (status === 'setup') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <svg
+              className="w-16 h-16 text-purple-600 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to DJAMMS!</h2>
+            <p className="text-gray-600">Let's set up your venue</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="venueId"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Venue ID (unique name for your venue)
+              </label>
+              <input
+                id="venueId"
+                type="text"
+                value={venueId}
+                onChange={(e) => setVenueId(e.target.value)}
+                placeholder="e.g., my-awesome-bar"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Use lowercase letters, numbers, and hyphens only
+              </p>
+            </div>
+
+            <button
+              onClick={handleVenueSetup}
+              disabled={!venueId || venueId.trim().length === 0}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Continue to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (status === 'verifying') {
     return (
