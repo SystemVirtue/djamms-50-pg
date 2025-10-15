@@ -25,7 +25,6 @@ export function PlayerView({ venueId }: PlayerViewProps) {
     skipTrack,
     queueStats,
     syncNow,
-    localNowPlaying,
   } = usePlayerWithSync({
     venueId,
     client,
