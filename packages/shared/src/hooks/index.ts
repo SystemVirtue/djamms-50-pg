@@ -5,6 +5,9 @@ export type {
   UseJukeboxStateReturn
 } from './useJukeboxState';
 
+export { useVenueAccess, useUserVenues } from './useVenueAccess';
+export type { VenueAccessResult } from './useVenueAccess';
+
 export { useQueueSync } from './useQueueSync';
 export type {
   UseQueueSyncOptions,
