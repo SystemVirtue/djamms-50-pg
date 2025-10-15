@@ -17,7 +17,6 @@ export function AuthCallback() {
   const [errorMessage, setErrorMessage] = useState('');
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [isClosingSession, setIsClosingSession] = useState(false);
-  const [showVenueSetup, setShowVenueSetup] = useState(false);
   const [venueId, setVenueId] = useState('');
   const [userId, setUserId] = useState('');
 
@@ -94,7 +93,6 @@ export function AuthCallback() {
       if (data.success) {
         if (data.requiresVenueSetup) {
           // New user - show venue setup
-          setShowVenueSetup(true);
           setStatus('setup');
         } else {
           // Existing user - redirect to dashboard
