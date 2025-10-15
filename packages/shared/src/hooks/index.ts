@@ -31,3 +31,9 @@ export type {
   UsePlayerManagerOptions,
   UsePlayerManagerReturn
 } from './usePlayerManager';
+
+export { usePlaylistManagement } from './usePlaylistManagement';
+export type {
+  UsePlaylistManagementConfig,
+  UsePlaylistManagementReturn
+} from './usePlaylistManagement';

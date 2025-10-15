@@ -13,3 +13,6 @@ export { PlayerService } from './PlayerService';
 
 export { PlayerSyncService } from './PlayerSyncService';
 export type { PlayerStateDocument, PlayerCommand } from './PlayerSyncService';
+
+export { PlaylistManagementService } from './PlaylistManagementService';
+export type { PlaylistServiceConfig } from './PlaylistManagementService';
