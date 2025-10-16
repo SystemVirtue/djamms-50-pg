@@ -75,15 +75,15 @@ export function AuthCallback() {
 
   const checkAndSetupUserProfile = async (_authUserId: string) => {
     // TODO: Re-implement user profile setup once setupUserProfile function is deployed
-    // For now, just redirect to dashboard
+    // For now, just redirect to dashboard with user ID
     try {
       const user = await account.get();
       console.log('User authenticated:', user);
       
-      // Simple redirect to dashboard (using userId)
+      // Redirect to dashboard with userId parameter
       setStatus('success');
       setTimeout(() => {
-        navigate(`/dashboard`);
+        navigate(`/dashboard/${user.$id}`);
       }, 1500);
     } catch (err: any) {
       console.error('Profile check error:', err);
