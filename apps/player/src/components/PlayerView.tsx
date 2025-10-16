@@ -26,6 +26,8 @@ export function PlayerView({ venueId }: PlayerViewProps) {
     skipTrack,
     queueStats,
     syncNow,
+    getNextTrack,
+    playTrack,
   } = usePlayerWithSync({
     venueId,
     client,
@@ -38,6 +40,7 @@ export function PlayerView({ venueId }: PlayerViewProps) {
   const [showControls, setShowControls] = useState(false);
   const [volume, setVolume] = useState(100);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
 
   // Request history tracking
   const { updateStatus, requests, loadHistory } = useRequestHistory({
@@ -45,6 +48,34 @@ export function PlayerView({ venueId }: PlayerViewProps) {
     client,
     autoLoad: false,
   });
+
+  // Auto-start first track when queue loads
+  useEffect(() => {
+    // Only auto-start once, when we have tracks but no current track
+    if (hasAutoStarted || isLoading || currentTrack) {
+      return;
+    }
+
+    // Check if we have any tracks in the queue
+    const hasTracks = priorityQueue.length > 0 || mainQueue.length > 0;
+    
+    if (hasTracks && getNextTrack && playTrack) {
+      console.log('[PlayerView] Auto-starting first track from queue');
+      setHasAutoStarted(true);
+      
+      // Get and play the first track
+      getNextTrack()
+        .then((track) => {
+          if (track) {
+            console.log('[PlayerView] Starting first track:', track.title);
+            return playTrack(track);
+          }
+        })
+        .catch((err: any) => {
+          console.error('[PlayerView] Failed to auto-start first track:', err);
+        });
+    }
+  }, [hasAutoStarted, isLoading, currentTrack, priorityQueue, mainQueue, getNextTrack, playTrack]);
 
   // Request history service for direct queries
   const requestServiceRef = useRef<RequestHistoryService | null>(null);

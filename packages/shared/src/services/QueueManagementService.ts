@@ -65,7 +65,85 @@ export class QueueManagementService {
   }
 
   /**
+   * Load tracks from venue's default playlist into the queue
+   */
+  private async loadPlaylistIntoQueue(venueId: string): Promise<QueueTrack[]> {
+    try {
+      // Get venue's default playlist ID
+      const venueResponse = await this.databases.listDocuments(
+        DATABASE_ID,
+        'venues',
+        [Query.equal('venueId', venueId), Query.limit(1)]
+      );
+
+      if (venueResponse.documents.length === 0) {
+        console.warn('[QueueService] Venue not found:', venueId);
+        return [];
+      }
+
+      const venue = venueResponse.documents[0];
+      const playlistId = venue.defaultPlaylistId || 'default_playlist';
+
+      console.log(`[QueueService] Loading playlist ${playlistId} for venue ${venueId}`);
+
+      // Get playlist
+      const playlistResponse = await this.databases.listDocuments(
+        DATABASE_ID,
+        'playlists',
+        [Query.equal('playlistId', playlistId), Query.limit(1)]
+      );
+
+      if (playlistResponse.documents.length === 0) {
+        console.warn('[QueueService] Playlist not found:', playlistId);
+        return [];
+      }
+
+      const playlist = playlistResponse.documents[0];
+      const tracksJson = playlist.tracks;
+
+      // Parse tracks
+      let tracks: any[];
+      try {
+        tracks = typeof tracksJson === 'string' ? JSON.parse(tracksJson) : tracksJson;
+        if (!Array.isArray(tracks)) {
+          console.warn('[QueueService] Invalid tracks format in playlist');
+          return [];
+        }
+      } catch (error) {
+        console.error('[QueueService] Failed to parse playlist tracks:', error);
+        return [];
+      }
+
+      // Limit to first 50 tracks to avoid overloading
+      const limitedTracks = tracks.slice(0, 50);
+
+      // Convert to QueueTrack format
+      const queueTracks: QueueTrack[] = limitedTracks.map((track, index) => ({
+        id: ID.unique(),
+        videoId: track.videoId || track.id || '',
+        title: track.title || 'Unknown Track',
+        artist: track.artist || 'Unknown Artist',
+        duration: track.duration || 0,
+        thumbnail: track.thumbnail || '',
+        requestedBy: 'System',
+        requestedByEmail: 'system@djamms.app',
+        requestedAt: new Date().toISOString(),
+        position: index,
+        status: 'queued' as const,
+        isPaid: false,
+      }));
+
+      console.log(`[QueueService] Loaded ${queueTracks.length} tracks from playlist`);
+      return queueTracks;
+    } catch (error) {
+      console.error('[QueueService] Error loading playlist into queue:', error);
+      return [];
+    }
+  }
+
+  /**
    * Get or create queue for venue
+   * Automatically loads default playlist if queue is empty
    */
   async getQueue(venueId: string): Promise<QueueDocument> {
     try {
@@ -76,17 +154,51 @@ export class QueueManagementService {
       );
 
       if (response.documents.length > 0) {
-        return response.documents[0];
+        const existingQueue = response.documents[0];
+        
+        // Check if queue is empty and needs initialization
+        const mainQueue = Array.isArray(existingQueue.mainQueue) ? existingQueue.mainQueue : [];
+        const priorityQueue = Array.isArray(existingQueue.priorityQueue) ? existingQueue.priorityQueue : [];
+        
+        if (mainQueue.length === 0 && priorityQueue.length === 0 && !existingQueue.currentTrack) {
+          console.log('[QueueService] Queue is empty, loading default playlist');
+          
+          // Load playlist tracks
+          const playlistTracks = await this.loadPlaylistIntoQueue(venueId);
+          
+          if (playlistTracks.length > 0) {
+            // Update queue with playlist tracks
+            const updated = await this.databases.updateDocument<QueueDocument>(
+              DATABASE_ID,
+              'queues',
+              existingQueue.$id,
+              {
+                mainQueue: playlistTracks,
+                updatedAt: new Date().toISOString(),
+              }
+            );
+            
+            console.log(`[QueueService] Initialized queue with ${playlistTracks.length} tracks`);
+            return updated;
+          }
+        }
+        
+        return existingQueue;
       }
 
       // Create new queue if doesn't exist
+      console.log('[QueueService] Creating new queue for venue:', venueId);
+      
+      // Try to load playlist tracks for new queue
+      const playlistTracks = await this.loadPlaylistIntoQueue(venueId);
+      
       return await this.databases.createDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         ID.unique(),
         {
           venueId,
-          mainQueue: [],
+          mainQueue: playlistTracks,
           priorityQueue: [],
           currentTrack: null,
         }
