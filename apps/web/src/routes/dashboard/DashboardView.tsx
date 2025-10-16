@@ -9,12 +9,14 @@ import {
   X,
   CheckCircle,
   Users,
-  Clock,
   Wifi,
   WifiOff,
   Monitor,
   Music
 } from 'lucide-react';
+import { QueueManagerTab } from '../../components/dashboard/QueueManagerTab';
+import { PlaylistLibraryTab } from '../../components/dashboard/PlaylistLibraryTab';
+import { ActivityLogsTab } from '../../components/dashboard/ActivityLogsTab';
 
 // Types
 interface DashboardCard {
@@ -408,95 +410,40 @@ export function DashboardView() {
           </div>
         ) : (
           // Tab Content
-          <div className="p-6">
-            <div className="max-w-6xl mx-auto">
-              {activeTab === 'queue' && (
-                <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <ListMusic className="w-8 h-8 text-purple-400" />
-                    <h2 className="text-3xl font-bold text-white">Queue Manager</h2>
-                  </div>
-                  <p className="text-gray-300 mb-4">
-                    View and manage your current playback queue. This feature will allow you to:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-400 space-y-2">
-                    <li>View upcoming tracks</li>
-                    <li>Reorder queue items</li>
-                    <li>Remove tracks from queue</li>
-                    <li>Add tracks from your library</li>
-                  </ul>
-                  <div className="mt-8 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                    <p className="text-blue-200 text-sm">
-                      <Clock className="w-4 h-4 inline mr-2" />
-                      <strong>Coming Soon:</strong> Full queue management interface with drag-and-drop support
-                    </p>
-                  </div>
-                </div>
-              )}
+          <div className="h-full">
+            {activeTab === 'queue' && (
+              <QueueManagerTab venueId="venue-001" />
+            )}
 
-              {activeTab === 'playlists' && (
-                <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Music className="w-8 h-8 text-pink-400" />
-                    <h2 className="text-3xl font-bold text-white">Playlist Library</h2>
-                  </div>
-                  <p className="text-gray-300 mb-4">
-                    Create, edit, and organize your playlists. This feature will include:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-400 space-y-2">
-                    <li>Create custom playlists</li>
-                    <li>Import from YouTube</li>
-                    <li>Share playlists with other venues</li>
-                    <li>Playlist statistics and analytics</li>
-                  </ul>
-                  <div className="mt-8 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                    <p className="text-blue-200 text-sm">
-                      <Clock className="w-4 h-4 inline mr-2" />
-                      <strong>Coming Soon:</strong> Advanced playlist management with YouTube integration
-                    </p>
-                  </div>
-                </div>
-              )}
+            {activeTab === 'playlists' && (
+              <PlaylistLibraryTab venueId="venue-001" />
+            )}
 
-              {activeTab === 'admin' && (
-                <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+            {activeTab === 'activity' && (
+              <ActivityLogsTab venueId="venue-001" />
+            )}
+
+            {activeTab === 'admin' && (
+              <div className="h-full p-6 overflow-auto bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+                <div className="max-w-6xl mx-auto">
                   <div className="flex items-center gap-3 mb-6">
                     <Settings className="w-8 h-8 text-gray-400" />
                     <h2 className="text-3xl font-bold text-white">Admin Console</h2>
                   </div>
-                  <p className="text-gray-300 mb-4">
-                    Configure player settings and preferences. Available settings:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-400 space-y-2">
-                    <li>Player configuration</li>
-                    <li>Venue settings</li>
-                    <li>User permissions</li>
-                    <li>System preferences</li>
-                  </ul>
-                  <div className="mt-8 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                    <p className="text-blue-200 text-sm">
-                      <Clock className="w-4 h-4 inline mr-2" />
-                      <strong>Coming Soon:</strong> Comprehensive admin controls and settings
+                  <div className="glass-morphism rounded-xl p-6">
+                    <p className="text-gray-300 mb-4">
+                      Advanced system settings and controls. Visit the full admin console for complete functionality.
                     </p>
+                    <button
+                      onClick={() => navigate('/admin/venue-001')}
+                      className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition font-medium"
+                    >
+                      Open Admin Console
+                    </button>
                   </div>
                 </div>
-              )}
-
-              {activeTab === 'activity' && (
-                <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-                  <h2 className="text-3xl font-bold text-white mb-6">Activity Logs</h2>
-                  <p className="text-gray-300 mb-4">
-                    Monitor system activity and track usage patterns.
-                  </p>
-                  <div className="mt-8 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                    <p className="text-blue-200 text-sm">
-                      <Clock className="w-4 h-4 inline mr-2" />
-                      <strong>Coming Soon:</strong> Real-time activity monitoring and analytics
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
