@@ -42,6 +42,9 @@ module.exports = async ({ req, res, log, error }) => {
     if (action === 'create') {
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = Date.now() + 15 * 60 * 1000;
+      
+      // Use MAGIC_REDIRECT env var or redirectUrl from request body
+      const redirectUrl = process.env.MAGIC_REDIRECT || body.redirectUrl || 'https://www.djamms.app/auth/callback';
 
       await databases.createDocument(
         process.env.APPWRITE_DATABASE_ID,
@@ -50,7 +53,7 @@ module.exports = async ({ req, res, log, error }) => {
         {
           email,
           token,
-          redirectUrl: body.redirectUrl || 'https://auth.djamms.app/callback',
+          redirectUrl: redirectUrl,
           expiresAt,
           used: false
         }
@@ -60,7 +63,7 @@ module.exports = async ({ req, res, log, error }) => {
 
       // Send email via Resend
       // Use secret/userId format to match AuthCallback expectations
-      const magicLink = `${body.redirectUrl || 'https://auth.djamms.app/callback'}?secret=${token}&userId=${encodeURIComponent(email)}`;
+      const magicLink = `${redirectUrl}?secret=${token}&userId=${encodeURIComponent(email)}`;
       
       if (process.env.RESEND_API_KEY) {
         try {
