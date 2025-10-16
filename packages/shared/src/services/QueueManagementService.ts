@@ -34,11 +34,16 @@ export interface QueueTrack {
 export interface QueueDocument {
   $id: string;
   venueId: string;
-  mainQueue: QueueTrack[];
-  priorityQueue: QueueTrack[];
-  currentTrack: QueueTrack | null;
+  mainQueue: string | QueueTrack[]; // Stored as JSON string in DB, parsed to array in code
+  priorityQueue: string | QueueTrack[]; // Stored as JSON string in DB, parsed to array in code
+  nowPlaying: string | null; // Stored as JSON string in DB
+  createdAt: string;
+  updatedAt: string;
   $createdAt: string;
   $updatedAt: string;
+  $collectionId: string;
+  $databaseId: string;
+  $permissions: string[];
 }
 
 export interface AddTrackOptions {
@@ -157,23 +162,38 @@ export class QueueManagementService {
         const existingQueue = response.documents[0];
         
         // Check if queue is empty and needs initialization
-        const mainQueue = Array.isArray(existingQueue.mainQueue) ? existingQueue.mainQueue : [];
-        const priorityQueue = Array.isArray(existingQueue.priorityQueue) ? existingQueue.priorityQueue : [];
+        // Note: queues are stored as JSON strings in the database
+        let mainQueue: QueueTrack[] = [];
+        let priorityQueue: QueueTrack[] = [];
         
-        if (mainQueue.length === 0 && priorityQueue.length === 0 && !existingQueue.currentTrack) {
+        try {
+          mainQueue = typeof existingQueue.mainQueue === 'string' 
+            ? JSON.parse(existingQueue.mainQueue) 
+            : (Array.isArray(existingQueue.mainQueue) ? existingQueue.mainQueue : []);
+          
+          priorityQueue = typeof existingQueue.priorityQueue === 'string'
+            ? JSON.parse(existingQueue.priorityQueue)
+            : (Array.isArray(existingQueue.priorityQueue) ? existingQueue.priorityQueue : []);
+        } catch (parseError) {
+          console.error('[QueueService] Error parsing queues:', parseError);
+          mainQueue = [];
+          priorityQueue = [];
+        }
+        
+        if (mainQueue.length === 0 && priorityQueue.length === 0 && !existingQueue.nowPlaying) {
           console.log('[QueueService] Queue is empty, loading default playlist');
           
           // Load playlist tracks
           const playlistTracks = await this.loadPlaylistIntoQueue(venueId);
           
           if (playlistTracks.length > 0) {
-            // Update queue with playlist tracks
+            // Update queue with playlist tracks (store as JSON string)
             const updated = await this.databases.updateDocument<QueueDocument>(
               DATABASE_ID,
               'queues',
               existingQueue.$id,
               {
-                mainQueue: playlistTracks,
+                mainQueue: JSON.stringify(playlistTracks),
                 updatedAt: new Date().toISOString(),
               }
             );
