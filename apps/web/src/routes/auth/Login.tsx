@@ -25,7 +25,7 @@ export function AuthLogin() {
     try {
       // Use AppWrite SDK to call the working magic-link function
       // The callback will verify the magic link and then redirect to dashboard
-      const redirectUrl = `${window.location.origin}/callback`;
+      const redirectUrl = `${window.location.origin}/auth/callback`;
       
       const result = await functions.createExecution(
         '68e5a317003c42c8bb6a', // magic-link function ID
