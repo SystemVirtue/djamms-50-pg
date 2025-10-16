@@ -1,4 +1,4 @@
-import { Client, Account, Databases } from 'appwrite';
+import { Client, Account, Databases, Functions } from 'appwrite';
 import { config } from '@shared/config/env';
 import type { AuthSession, AuthUser } from '@shared/types/auth';
 
@@ -6,6 +6,7 @@ export class AuthService {
   private client: Client;
   private account: Account;
   private databases: Databases;
+  private functions: Functions;
 
   constructor() {
     this.client = new Client()
@@ -13,6 +14,7 @@ export class AuthService {
       .setProject(config.appwrite.projectId);
     this.account = new Account(this.client);
     this.databases = new Databases(this.client);
+    this.functions = new Functions(this.client);
   }
 
   async sendMagicLink(email: string, redirectUrl?: string): Promise<void> {
@@ -20,79 +22,76 @@ export class AuthService {
     
     try {
       // Debug: Log the config values
-      console.log('📋 Config check:');
+      console.log('📋 Magic Link Send:');
       console.log('  - endpoint:', config.appwrite.endpoint);
       console.log('  - projectId:', config.appwrite.projectId);
       console.log('  - functionId:', config.appwrite.functions.magicLink);
+      console.log('  - email:', email);
+      console.log('  - redirectUrl:', url);
       
-      // Construct the correct AppWrite Cloud Functions URL
-      // endpoint is already "https://syd.cloud.appwrite.io/v1"
-      const functionUrl = `${config.appwrite.endpoint}/functions/${config.appwrite.functions.magicLink}/executions`;
+      // Use AppWrite SDK's Functions.createExecution
+      const result = await this.functions.createExecution(
+        config.appwrite.functions.magicLink,
+        JSON.stringify({ 
+          action: 'create',
+          email, 
+          redirectUrl: url 
+        }),
+        false // async execution
+      );
       
-      console.log('🔗 Calling magic link function:', functionUrl);
-      console.log('📧 Email:', email);
-      console.log('🔄 Redirect URL:', url);
+      console.log('✅ Magic link execution:', result);
       
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Appwrite-Project': config.appwrite.projectId
-        },
-        body: JSON.stringify({ 
-          body: JSON.stringify({ 
-            action: 'create',
-            email, 
-            redirectUrl: url 
-          })
-        })
-      });
-
-      console.log('📡 Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Magic link API error:', response.status, errorText);
-        throw new Error(`Failed to send magic link: ${response.status}`);
+      // Check if execution succeeded
+      if (result.status === 'failed') {
+        console.error('❌ Magic link execution failed:', result.response);
+        throw new Error('Failed to send magic link');
       }
       
-      const result = await response.json();
-      console.log('✅ Magic link response:', result);
-    } catch (error) {
-      console.error('Magic link send error:', error);
-      throw error;
+      if (result.status === 'completed' && result.response) {
+        try {
+          const responseData = JSON.parse(result.response);
+          console.log('✅ Magic link sent:', responseData);
+        } catch (e) {
+          console.log('✅ Magic link sent (non-JSON response)');
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Magic link error:', error);
+      throw new Error(error.message || 'Failed to send magic link');
     }
   }
 
   async handleMagicLinkCallback(secret: string, userId: string): Promise<AuthSession> {
     try {
-      const functionUrl = `${config.appwrite.endpoint}/functions/${config.appwrite.functions.magicLink}/executions`;
-      console.log('🔗 Verifying magic link at:', functionUrl);
+      console.log('🔗 Verifying magic link callback');
+      console.log('  - userId:', userId);
+      console.log('  - secret:', secret.substring(0, 10) + '...');
       
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Appwrite-Project': config.appwrite.projectId
-        },
-        body: JSON.stringify({ 
-          body: JSON.stringify({
-            action: 'verify',
-            secret, 
-            userId 
-          })
-        })
-      });
+      // Use AppWrite SDK's Functions.createExecution
+      const result = await this.functions.createExecution(
+        config.appwrite.functions.magicLink,
+        JSON.stringify({
+          action: 'verify',
+          secret, 
+          userId 
+        }),
+        false
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Magic link verify error:', response.status, errorText);
-        throw new Error(`Magic link callback failed: ${response.status}`);
+      console.log('✅ Verify execution:', result);
+
+      if (result.status === 'failed') {
+        console.error('❌ Magic link verify failed:', result.response);
+        throw new Error('Magic link verification failed');
       }
 
-      const result = await response.json();
-      console.log('✅ Verify response:', result);
-      const data = JSON.parse(result.responseBody);
+      if (!result.response) {
+        throw new Error('No response from magic link verification');
+      }
+
+      const data = JSON.parse(result.response);
+      console.log('✅ Magic link verified, user:', data.user?.email);
       
       // Store in localStorage
       localStorage.setItem('authToken', data.token);
@@ -101,9 +100,9 @@ export class AuthService {
       const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
       
       return { token: data.token, user: data.user, expiresAt };
-    } catch (error) {
-      console.error('Magic link callback error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('❌ Magic link callback error:', error);
+      throw new Error(error.message || 'Magic link verification failed');
     }
   }
 
