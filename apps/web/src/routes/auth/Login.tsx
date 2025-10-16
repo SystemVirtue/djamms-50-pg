@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { Client } from 'appwrite';
+import { Client, Functions } from 'appwrite';
 
 // Initialize AppWrite Client
 const client = new Client();
@@ -7,6 +7,8 @@ const client = new Client();
 client
   .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
   .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+
+const functions = new Functions(client);
 
 export function AuthLogin() {
   const [email, setEmail] = useState('');
@@ -21,39 +23,51 @@ export function AuthLogin() {
     setSuccess(false);
 
     try {
-      // Call our custom Cloud Function to validate user exists before sending magic link
-      const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_VALIDATE_MAGIC_LINK;
+      // Use AppWrite SDK to call the working magic-link function
+      const redirectUrl = `${window.location.origin}/callback`;
       
-      const response = await fetch(functionEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email })
-      });
+      const result = await functions.createExecution(
+        '68e5a317003c42c8bb6a', // magic-link function ID
+        JSON.stringify({ 
+          action: 'create',
+          email, 
+          redirectUrl 
+        }),
+        false // not async
+      );
 
-      const data = await response.json();
+      console.log('Magic link execution result:', result);
 
-      if (!response.ok || !data.success) {
-        // Handle specific error cases
-        if (data.error === 'USER_NOT_REGISTERED') {
-          // Show popup for unregistered user
-          alert('Email is not registered - please enter a valid email address!');
-          setError('This email is not registered. Please contact your administrator.');
-        } else if (data.error === 'RATE_LIMIT') {
-          setError('Too many attempts. Please try again in a few minutes.');
-        } else {
-          setError(data.message || 'Failed to send magic link. Please try again.');
-        }
+      // Check if execution succeeded
+      if (result.status === 'failed') {
+        console.error('Magic link execution failed:', result.responseBody);
+        setError('Failed to send magic link. Please try again.');
         return;
       }
 
-      // Success - magic link sent
-      setSuccess(true);
-      setEmail('');
+      if (result.status === 'completed' && result.responseBody) {
+        const data = JSON.parse(result.responseBody);
+        
+        if (!data.success) {
+          // Handle specific error cases
+          if (data.error === 'USER_NOT_REGISTERED') {
+            alert('Email is not registered - please enter a valid email address!');
+            setError('This email is not registered. Please contact your administrator.');
+          } else if (data.error === 'RATE_LIMIT') {
+            setError('Too many attempts. Please try again in a few minutes.');
+          } else {
+            setError(data.message || data.error || 'Failed to send magic link. Please try again.');
+          }
+          return;
+        }
+
+        // Success - magic link sent
+        setSuccess(true);
+        setEmail('');
+      }
     } catch (err: any) {
       console.error('Magic link error:', err);
-      setError('Network error. Please check your connection and try again.');
+      setError(err.message || 'Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
