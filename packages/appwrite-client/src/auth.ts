@@ -40,12 +40,16 @@ export class AuthService {
         false // async execution
       );
       
-      console.log('✅ Magic link execution:', result);
+      console.log('✅ Magic link execution result:', {
+        status: result.status,
+        statusCode: result.statusCode,
+        response: result.response,
+      });
       
       // Check if execution succeeded
       if (result.status === 'failed') {
         console.error('❌ Magic link execution failed:', result.response);
-        throw new Error('Failed to send magic link');
+        throw new Error('Failed to send magic link. Check if the function is deployed.');
       }
       
       if (result.status === 'completed' && result.response) {
@@ -54,10 +58,17 @@ export class AuthService {
           console.log('✅ Magic link sent:', responseData);
         } catch (e) {
           console.log('✅ Magic link sent (non-JSON response)');
+          console.log('Raw response:', result.response.substring(0, 200));
         }
       }
     } catch (error: any) {
       console.error('❌ Magic link error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        type: error.type,
+        response: error.response
+      });
       throw new Error(error.message || 'Failed to send magic link');
     }
   }
