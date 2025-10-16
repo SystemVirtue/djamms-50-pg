@@ -1,6 +1,0 @@
-{
-  "buildCommand": "npm run build:auth",
-  "outputDirectory": "apps/auth/dist",
-  "installCommand": "npm install",
-  "framework": null
-}
