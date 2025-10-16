@@ -24,3 +24,10 @@ export type { PlayerStateDocument, PlayerCommand } from './PlayerSyncService';
 
 export { PlaylistManagementService } from './PlaylistManagementService';
 export type { PlaylistServiceConfig } from './PlaylistManagementService';
+
+export { RequestHistoryService } from './RequestHistoryService';
+export type {
+  SongRequest,
+  RequestHistoryFilters,
+  RequestAnalytics
+} from './RequestHistoryService';

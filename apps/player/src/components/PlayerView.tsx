@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppwrite } from '@appwrite/AppwriteContext';
-import { usePlayerWithSync } from '@shared/hooks';
+import { usePlayerWithSync, useRequestHistory } from '@shared/hooks';
+import { RequestHistoryService, SongRequest } from '@shared/services';
 import { YouTubePlayer, BackgroundSlideshow } from '@shared/components';
 import { PlayerBusyScreen } from './PlayerBusyScreen';
 import { Volume2, VolumeX, Play, Pause, SkipForward } from 'lucide-react';
@@ -37,6 +38,99 @@ export function PlayerView({ venueId }: PlayerViewProps) {
   const [showControls, setShowControls] = useState(false);
   const [volume, setVolume] = useState(100);
   const [isPlaying, setIsPlaying] = useState(true);
+
+  // Request history tracking
+  const { updateStatus, requests, loadHistory } = useRequestHistory({
+    venueId,
+    client,
+    autoLoad: false,
+  });
+
+  // Request history service for direct queries
+  const requestServiceRef = useRef<RequestHistoryService | null>(null);
+  if (!requestServiceRef.current) {
+    requestServiceRef.current = new RequestHistoryService(
+      client,
+      import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main-db'
+    );
+  }
+
+  // Track the currently playing request ID to avoid duplicate updates
+  const currentRequestIdRef = useRef<string | null>(null);
+
+  /**
+   * Find the most recent queued request matching the current track
+   * Uses videoId and recent timestamp to match
+   */
+  const findRequestForTrack = async (track: typeof currentTrack): Promise<SongRequest | null> => {
+    if (!track) return null;
+
+    try {
+      // Load recent queued requests if not already loaded
+      if (requests.length === 0) {
+        await loadHistory({ status: 'queued', limit: 50 });
+      }
+
+      // Find matching request by videoId and recent timestamp
+      const matchingRequest = requests.find(
+        (req: SongRequest) =>
+          req.song.videoId === track.videoId &&
+          Math.abs(new Date(req.timestamp).getTime() - new Date(track.requestedAt).getTime()) < 60000 // Within 1 minute
+      );
+
+      // If not found in loaded requests, query directly
+      if (!matchingRequest && requestServiceRef.current) {
+        const recentRequests = await requestServiceRef.current.getRequestHistory(venueId, {
+          status: 'queued',
+          limit: 50,
+        });
+        
+        return recentRequests.find(
+          (req: SongRequest) =>
+            req.song.videoId === track.videoId &&
+            Math.abs(new Date(req.timestamp).getTime() - new Date(track.requestedAt).getTime()) < 60000
+        ) || null;
+      }
+
+      return matchingRequest || null;
+    } catch (error) {
+      console.error('[PlayerView] Failed to find request for track:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Update request status when track starts playing
+   */
+  useEffect(() => {
+    if (!currentTrack) {
+      currentRequestIdRef.current = null;
+      return;
+    }
+
+    // Only update if this is a new track
+    const trackKey = `${currentTrack.videoId}-${currentTrack.requestedAt}`;
+    if (currentRequestIdRef.current === trackKey) {
+      return;
+    }
+
+    // Update status to "playing"
+    const updatePlaying = async () => {
+      try {
+        const request = await findRequestForTrack(currentTrack);
+        if (request && request.status === 'queued') {
+          await updateStatus(request.requestId, 'playing');
+          currentRequestIdRef.current = trackKey;
+          console.log('[PlayerView] ✓ Updated request status to playing:', request.requestId);
+        }
+      } catch (error) {
+        console.error('[PlayerView] Failed to update request to playing:', error);
+      }
+    };
+
+    updatePlaying();
+  }, [currentTrack]);
+
 
   // Loading state
   if (isLoading) {
@@ -78,7 +172,50 @@ export function PlayerView({ venueId }: PlayerViewProps) {
     setIsMuted(!isMuted);
   };
 
+  /**
+   * Enhanced track end handler that updates request status to 'completed'
+   */
+  const handleTrackEndWithStatus = async () => {
+    // Update request status to completed
+    if (currentTrack) {
+      try {
+        const request = await findRequestForTrack(currentTrack);
+        if (request) {
+          await updateStatus(request.requestId, 'completed', {
+            completedAt: new Date().toISOString(),
+          });
+          console.log('[PlayerView] ✓ Updated request status to completed:', request.requestId);
+        }
+      } catch (error) {
+        console.error('[PlayerView] Failed to update request to completed:', error);
+      }
+    }
+
+    // Call original track end handler
+    await handleTrackEnd();
+  };
+
+  /**
+   * Enhanced skip handler that updates request status to 'cancelled'
+   */
   const handleSkip = async () => {
+    // Update request status to cancelled
+    if (currentTrack) {
+      try {
+        const request = await findRequestForTrack(currentTrack);
+        if (request) {
+          await updateStatus(request.requestId, 'cancelled', {
+            cancelledAt: new Date().toISOString(),
+            cancelReason: 'Skipped by admin',
+          });
+          console.log('[PlayerView] ✓ Updated request status to cancelled:', request.requestId);
+        }
+      } catch (error) {
+        console.error('[PlayerView] Failed to update request to cancelled:', error);
+      }
+    }
+
+    // Call original skip handler
     await skipTrack();
   };
 
@@ -111,7 +248,7 @@ export function PlayerView({ venueId }: PlayerViewProps) {
       {currentTrack && displayTrack && (
         <YouTubePlayer
           track={displayTrack}
-          onEnded={handleTrackEnd}
+          onEnded={handleTrackEndWithStatus}
           onError={(err: string) => console.error('YouTube player error:', err)}
           autoplay={isPlaying}
           volume={isMuted ? 0 : volume}

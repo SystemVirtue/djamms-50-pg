@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom';
 import { PlayerControls } from './PlayerControls';
 import { SystemSettings } from './SystemSettings';
 import { QueueManagement } from './QueueManagement';
-import { Monitor, Settings, List } from 'lucide-react';
+import { RequestHistoryPanel } from './RequestHistoryPanel';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { Monitor, Settings, List, History, BarChart3 } from 'lucide-react';
 
-type Tab = 'controls' | 'queue' | 'settings';
+type Tab = 'controls' | 'queue' | 'settings' | 'history' | 'analytics';
 
 export function AdminView() {
   const { venueId } = useParams<{ venueId: string }>();
@@ -79,6 +81,28 @@ export function AdminView() {
               <Settings size={20} />
               System Settings
             </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-2 px-6 py-4 font-medium transition border-b-2 ${
+                activeTab === 'history'
+                  ? 'border-orange-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white'
+              }`}
+            >
+              <History size={20} />
+              Request History
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex items-center gap-2 px-6 py-4 font-medium transition border-b-2 ${
+                activeTab === 'analytics'
+                  ? 'border-orange-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white'
+              }`}
+            >
+              <BarChart3 size={20} />
+              Analytics
+            </button>
           </nav>
         </div>
       </div>
@@ -93,6 +117,12 @@ export function AdminView() {
         )}
         {activeTab === 'settings' && (
           <SystemSettings venueId={venueId} databaseId={databaseId} />
+        )}
+        {activeTab === 'history' && (
+          <RequestHistoryPanel venueId={venueId} databaseId={databaseId} />
+        )}
+        {activeTab === 'analytics' && (
+          <AnalyticsDashboard venueId={venueId} databaseId={databaseId} />
         )}
       </main>
     </div>

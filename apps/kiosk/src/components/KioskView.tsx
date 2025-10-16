@@ -8,6 +8,7 @@ import {
   SearchResult, 
   useJukeboxState,
   useQueueSync,
+  useRequestHistory,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -21,7 +22,7 @@ import { SearchInterface } from './SearchInterface';
 
 export const KioskView: React.FC = () => {
   const { venueId } = useParams<{ venueId: string }>();
-  const { client } = useAppwrite();
+  const { client, session } = useAppwrite();
   
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSuccessScreen, setShowSuccessScreen] = useState(false);
@@ -75,13 +76,20 @@ export const KioskView: React.FC = () => {
     }
   });
 
+  // Request history tracking
+  const { logRequest } = useRequestHistory({
+    venueId: venueId || '',
+    client,
+    autoLoad: false
+  });
+
   const handleVideoSelect = (video: SearchResult) => {
     setSelectedVideo(video);
     setShowConfirmDialog(true);
   };
 
   const handleConfirmRequest = async () => {
-    if (!selectedVideo) return;
+    if (!selectedVideo || !venueId) return;
 
     const isPaid = state.mode === 'PAID';
 
@@ -99,6 +107,28 @@ export const KioskView: React.FC = () => {
 
       // Then sync to AppWrite
       await addToRemoteQueue(selectedVideo, isPaid);
+
+      // Log request to history
+      try {
+        await logRequest({
+          venueId,
+          song: {
+            videoId: selectedVideo.id.videoId,
+            title: selectedVideo.snippet.title,
+            artist: selectedVideo.snippet.channelTitle || 'Unknown Artist',
+            duration: 0, // Duration not available from search results
+            thumbnail: selectedVideo.snippet.thumbnails?.default?.url || ''
+          },
+          requesterId: session?.user?.userId || 'anonymous',
+          paymentId: isPaid ? `credit-${Date.now()}` : undefined,
+          status: 'queued',
+          timestamp: new Date().toISOString()
+        });
+        console.log('✓ Request logged to history');
+      } catch (historyError) {
+        // Don't fail the whole operation if history logging fails
+        console.error('Failed to log request history:', historyError);
+      }
 
       // Calculate queue position
       const position = isPaid 

@@ -123,14 +123,18 @@ const collections = [
       { key: 'venueId', type: 'string', size: 255, required: true },
       { key: 'song', type: 'string', size: 10000, required: true }, // JSON string
       { key: 'requesterId', type: 'string', size: 255, required: true },
-      { key: 'paymentId', type: 'string', size: 255, required: true },
+      { key: 'paymentId', type: 'string', size: 255, required: false }, // Optional - only for paid requests
       { key: 'status', type: 'enum', elements: ['queued', 'playing', 'completed', 'cancelled'], required: false, default: 'queued' },
       { key: 'timestamp', type: 'datetime', required: true },
+      { key: 'completedAt', type: 'datetime', required: false }, // When track finished playing
+      { key: 'cancelledAt', type: 'datetime', required: false }, // When track was skipped
+      { key: 'cancelReason', type: 'string', size: 500, required: false }, // Why track was cancelled
     ],
     indexes: [
       { key: 'venueId_key', type: 'key', attributes: ['venueId'] },
       { key: 'requesterId_key', type: 'key', attributes: ['requesterId'] },
       { key: 'timestamp_key', type: 'key', attributes: ['timestamp'] },
+      { key: 'status_key', type: 'key', attributes: ['status'] }, // For filtering by status
     ],
   },
 ];

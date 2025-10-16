@@ -43,3 +43,9 @@ export type {
   UseYouTubeSearchConfig,
   UseYouTubeSearchReturn
 } from './useYouTubeSearch';
+
+export { useRequestHistory } from './useRequestHistory';
+export type {
+  UseRequestHistoryConfig,
+  UseRequestHistoryReturn
+} from './useRequestHistory';
