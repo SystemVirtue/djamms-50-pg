@@ -70,6 +70,33 @@ export class QueueManagementService {
   }
 
   /**
+   * Helper: Parse queue from string or array
+   */
+  private parseQueue(queueData: string | QueueTrack[]): QueueTrack[] {
+    if (typeof queueData === 'string') {
+      try {
+        return JSON.parse(queueData);
+      } catch {
+        return [];
+      }
+    }
+    return Array.isArray(queueData) ? queueData : [];
+  }
+
+  /**
+   * Helper: Get parsed queues from document
+   */
+  private getParsedQueues(queue: QueueDocument): { 
+    mainQueue: QueueTrack[]; 
+    priorityQueue: QueueTrack[];
+  } {
+    return {
+      mainQueue: this.parseQueue(queue.mainQueue),
+      priorityQueue: this.parseQueue(queue.priorityQueue),
+    };
+  }
+
+  /**
    * Load tracks from venue's default playlist into the queue
    */
   private async loadPlaylistIntoQueue(venueId: string): Promise<QueueTrack[]> {
@@ -258,7 +285,17 @@ export class QueueManagementService {
 
       // Determine which queue to add to
       const targetQueue = track.isPaid ? 'priorityQueue' : 'mainQueue';
-      const currentQueue = queue[targetQueue];
+      
+      // Parse current queue from JSON string if needed
+      let currentQueue: QueueTrack[];
+      const queueData = queue[targetQueue];
+      if (typeof queueData === 'string') {
+        currentQueue = JSON.parse(queueData);
+      } else if (Array.isArray(queueData)) {
+        currentQueue = queueData;
+      } else {
+        currentQueue = [];
+      }
 
       // Set position (last in queue)
       track.position = currentQueue.length;
@@ -266,13 +303,14 @@ export class QueueManagementService {
       // Add to queue
       const updatedQueue = [...currentQueue, track];
 
-      // Update in database
+      // Update in database (must stringify for database storage)
       const updated = await this.databases.updateDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         queue.$id,
         {
-          [targetQueue]: updatedQueue,
+          [targetQueue]: JSON.stringify(updatedQueue),
+          updatedAt: new Date().toISOString(),
         }
       );
 
@@ -294,24 +332,34 @@ export class QueueManagementService {
     try {
       const queue = await this.getQueue(venueId);
 
+      // Parse queues from JSON strings
+      const priorityQueueData = typeof queue.priorityQueue === 'string' 
+        ? JSON.parse(queue.priorityQueue) 
+        : (Array.isArray(queue.priorityQueue) ? queue.priorityQueue : []);
+      
+      const mainQueueData = typeof queue.mainQueue === 'string'
+        ? JSON.parse(queue.mainQueue)
+        : (Array.isArray(queue.mainQueue) ? queue.mainQueue : []);
+
       // Remove from priority queue
-      let priorityQueue = queue.priorityQueue.filter(t => t.id !== trackId);
+      let priorityQueue = priorityQueueData.filter((t: QueueTrack) => t.id !== trackId);
       
       // Remove from main queue
-      let mainQueue = queue.mainQueue.filter(t => t.id !== trackId);
+      let mainQueue = mainQueueData.filter((t: QueueTrack) => t.id !== trackId);
 
       // Reindex positions
       priorityQueue = this.reindexPositions(priorityQueue);
       mainQueue = this.reindexPositions(mainQueue);
 
-      // Update in database
+      // Update in database (must stringify)
       const updated = await this.databases.updateDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         queue.$id,
         {
-          priorityQueue,
-          mainQueue,
+          priorityQueue: JSON.stringify(priorityQueue),
+          mainQueue: JSON.stringify(mainQueue),
+          updatedAt: new Date().toISOString(),
         }
       );
 
@@ -333,23 +381,24 @@ export class QueueManagementService {
   ): Promise<QueueDocument> {
     try {
       const queue = await this.getQueue(venueId);
-      const currentQueue = queue[queueType];
+      const currentQueue = this.parseQueue(queue[queueType]);
 
       // Reorder based on trackIds array
       const reordered = trackIds
-        .map(id => currentQueue.find(t => t.id === id))
+        .map(id => currentQueue.find((t: QueueTrack) => t.id === id))
         .filter((t): t is QueueTrack => t !== undefined);
 
       // Reindex positions
       const reindexed = this.reindexPositions(reordered);
 
-      // Update in database
+      // Update in database (must stringify)
       const updated = await this.databases.updateDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         queue.$id,
         {
-          [queueType]: reindexed,
+          [queueType]: JSON.stringify(reindexed),
+          updatedAt: new Date().toISOString(),
         }
       );
 
@@ -368,15 +417,16 @@ export class QueueManagementService {
   async getNextTrack(venueId: string): Promise<QueueTrack | null> {
     try {
       const queue = await this.getQueue(venueId);
+      const { priorityQueue, mainQueue } = this.getParsedQueues(queue);
 
       // Check priority queue first
-      if (queue.priorityQueue.length > 0) {
-        return queue.priorityQueue[0];
+      if (priorityQueue.length > 0) {
+        return priorityQueue[0];
       }
 
       // Then check main queue
-      if (queue.mainQueue.length > 0) {
-        return queue.mainQueue[0];
+      if (mainQueue.length > 0) {
+        return mainQueue[0];
       }
 
       return null;
@@ -395,14 +445,13 @@ export class QueueManagementService {
   ): Promise<QueueDocument> {
     try {
       const queue = await this.getQueue(venueId);
+      const { priorityQueue, mainQueue } = this.getParsedQueues(queue);
 
       // Find track in either queue
-      let track = queue.priorityQueue.find(t => t.id === trackId);
-      let queueType: 'priorityQueue' | 'mainQueue' = 'priorityQueue';
+      let track = priorityQueue.find((t: QueueTrack) => t.id === trackId);
 
       if (!track) {
-        track = queue.mainQueue.find(t => t.id === trackId);
-        queueType = 'mainQueue';
+        track = mainQueue.find((t: QueueTrack) => t.id === trackId);
       }
 
       if (!track) {
@@ -412,13 +461,14 @@ export class QueueManagementService {
       // Update track status
       track.status = 'playing';
 
-      // Set as current track
+      // Set as current track (store as JSON string)
       const updated = await this.databases.updateDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         queue.$id,
         {
-          currentTrack: track,
+          nowPlaying: JSON.stringify(track),
+          updatedAt: new Date().toISOString(),
         }
       );
 
@@ -437,37 +487,51 @@ export class QueueManagementService {
     try {
       const queue = await this.getQueue(venueId);
 
-      if (!queue.currentTrack) {
+      // Parse nowPlaying
+      let currentTrack: QueueTrack | null = null;
+      if (queue.nowPlaying) {
+        try {
+          currentTrack = typeof queue.nowPlaying === 'string' 
+            ? JSON.parse(queue.nowPlaying) 
+            : queue.nowPlaying;
+        } catch {
+          currentTrack = null;
+        }
+      }
+
+      if (!currentTrack) {
         console.warn('[QueueService] No current track to complete');
         return queue;
       }
 
-      const completedTrackId = queue.currentTrack.id;
+      const completedTrackId = currentTrack.id;
+      const { priorityQueue, mainQueue } = this.getParsedQueues(queue);
 
       // Remove completed track from queues
-      const priorityQueue = queue.priorityQueue.filter(t => t.id !== completedTrackId);
-      const mainQueue = queue.mainQueue.filter(t => t.id !== completedTrackId);
+      const filteredPriority = priorityQueue.filter((t: QueueTrack) => t.id !== completedTrackId);
+      const filteredMain = mainQueue.filter((t: QueueTrack) => t.id !== completedTrackId);
 
       // Reindex positions
-      const reindexedPriority = this.reindexPositions(priorityQueue);
-      const reindexedMain = this.reindexPositions(mainQueue);
+      const reindexedPriority = this.reindexPositions(filteredPriority);
+      const reindexedMain = this.reindexPositions(filteredMain);
 
       // Log to requests collection for analytics
-      await this.logRequest(queue.currentTrack, 'played');
+      await this.logRequest(currentTrack, 'played');
 
-      // Update in database
+      // Update in database (must stringify)
       const updated = await this.databases.updateDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         queue.$id,
         {
-          priorityQueue: reindexedPriority,
-          mainQueue: reindexedMain,
-          currentTrack: null, // Will be set by next playNextTrack call
+          priorityQueue: JSON.stringify(reindexedPriority),
+          mainQueue: JSON.stringify(reindexedMain),
+          nowPlaying: null,
+          updatedAt: new Date().toISOString(),
         }
       );
 
-      console.log('[QueueService] Completed track:', queue.currentTrack.title);
+      console.log('[QueueService] Completed track:', currentTrack.title);
       return updated;
     } catch (error) {
       console.error('[QueueService] Error completing track:', error);
@@ -482,37 +546,51 @@ export class QueueManagementService {
     try {
       const queue = await this.getQueue(venueId);
 
-      if (!queue.currentTrack) {
+      // Parse nowPlaying
+      let currentTrack: QueueTrack | null = null;
+      if (queue.nowPlaying) {
+        try {
+          currentTrack = typeof queue.nowPlaying === 'string' 
+            ? JSON.parse(queue.nowPlaying) 
+            : queue.nowPlaying;
+        } catch {
+          currentTrack = null;
+        }
+      }
+
+      if (!currentTrack) {
         console.warn('[QueueService] No current track to skip');
         return queue;
       }
 
-      const skippedTrackId = queue.currentTrack.id;
+      const skippedTrackId = currentTrack.id;
+      const { priorityQueue, mainQueue } = this.getParsedQueues(queue);
 
       // Remove skipped track from queues
-      const priorityQueue = queue.priorityQueue.filter(t => t.id !== skippedTrackId);
-      const mainQueue = queue.mainQueue.filter(t => t.id !== skippedTrackId);
+      const filteredPriority = priorityQueue.filter((t: QueueTrack) => t.id !== skippedTrackId);
+      const filteredMain = mainQueue.filter((t: QueueTrack) => t.id !== skippedTrackId);
 
       // Reindex positions
-      const reindexedPriority = this.reindexPositions(priorityQueue);
-      const reindexedMain = this.reindexPositions(mainQueue);
+      const reindexedPriority = this.reindexPositions(filteredPriority);
+      const reindexedMain = this.reindexPositions(filteredMain);
 
       // Log to requests collection for analytics
-      await this.logRequest(queue.currentTrack, 'skipped');
+      await this.logRequest(currentTrack, 'skipped');
 
-      // Update in database
+      // Update in database (must stringify)
       const updated = await this.databases.updateDocument<QueueDocument>(
         DATABASE_ID,
         'queues',
         queue.$id,
         {
-          priorityQueue: reindexedPriority,
-          mainQueue: reindexedMain,
-          currentTrack: null,
+          priorityQueue: JSON.stringify(reindexedPriority),
+          mainQueue: JSON.stringify(reindexedMain),
+          nowPlaying: null,
+          updatedAt: new Date().toISOString(),
         }
       );
 
-      console.log('[QueueService] Skipped track:', queue.currentTrack.title);
+      console.log('[QueueService] Skipped track:', currentTrack.title);
       return updated;
     } catch (error) {
       console.error('[QueueService] Error skipping track:', error);
@@ -564,11 +642,24 @@ export class QueueManagementService {
   ): Promise<boolean> {
     try {
       const queue = await this.getQueue(venueId);
+      const { priorityQueue, mainQueue } = this.getParsedQueues(queue);
 
       // Check both queues
-      const inPriority = queue.priorityQueue.some(t => t.videoId === videoId);
-      const inMain = queue.mainQueue.some(t => t.videoId === videoId);
-      const isCurrent = queue.currentTrack?.videoId === videoId;
+      const inPriority = priorityQueue.some((t: QueueTrack) => t.videoId === videoId);
+      const inMain = mainQueue.some((t: QueueTrack) => t.videoId === videoId);
+      
+      // Check now playing
+      let isCurrent = false;
+      if (queue.nowPlaying) {
+        try {
+          const nowPlaying = typeof queue.nowPlaying === 'string' 
+            ? JSON.parse(queue.nowPlaying) 
+            : queue.nowPlaying;
+          isCurrent = nowPlaying?.videoId === videoId;
+        } catch {
+          isCurrent = false;
+        }
+      }
 
       return inPriority || inMain || isCurrent;
     } catch (error) {
@@ -588,15 +679,28 @@ export class QueueManagementService {
   }> {
     try {
       const queue = await this.getQueue(venueId);
+      const { priorityQueue, mainQueue } = this.getParsedQueues(queue);
 
-      const priorityCount = queue.priorityQueue.length;
-      const mainCount = queue.mainQueue.length;
+      const priorityCount = priorityQueue.length;
+      const mainCount = mainQueue.length;
       const totalCount = priorityCount + mainCount;
 
       // Calculate estimated wait time (sum of all durations)
-      const priorityDuration = queue.priorityQueue.reduce((sum, t) => sum + t.duration, 0);
-      const mainDuration = queue.mainQueue.reduce((sum, t) => sum + t.duration, 0);
-      const currentDuration = queue.currentTrack?.duration || 0;
+      const priorityDuration = priorityQueue.reduce((sum: number, t: QueueTrack) => sum + t.duration, 0);
+      const mainDuration = mainQueue.reduce((sum: number, t: QueueTrack) => sum + t.duration, 0);
+      
+      // Get current track duration
+      let currentDuration = 0;
+      if (queue.nowPlaying) {
+        try {
+          const nowPlaying = typeof queue.nowPlaying === 'string' 
+            ? JSON.parse(queue.nowPlaying) 
+            : queue.nowPlaying;
+          currentDuration = nowPlaying?.duration || 0;
+        } catch {
+          currentDuration = 0;
+        }
+      }
 
       const estimatedWaitTime = priorityDuration + mainDuration + currentDuration;
 
