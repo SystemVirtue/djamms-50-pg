@@ -68,9 +68,54 @@ export function useQueueManagement(
     }
   }, [client]);
 
+  // Helper to parse queue data
+  const parseQueueData = (queueDoc: any) => {
+    if (!queueDoc) return null;
+    
+    let mainQueue: QueueTrack[] = [];
+    let priorityQueue: QueueTrack[] = [];
+    let currentTrack: QueueTrack | null = null;
+    
+    // Parse mainQueue
+    try {
+      mainQueue = typeof queueDoc.mainQueue === 'string'
+        ? JSON.parse(queueDoc.mainQueue)
+        : (Array.isArray(queueDoc.mainQueue) ? queueDoc.mainQueue : []);
+    } catch {
+      mainQueue = [];
+    }
+    
+    // Parse priorityQueue
+    try {
+      priorityQueue = typeof queueDoc.priorityQueue === 'string'
+        ? JSON.parse(queueDoc.priorityQueue)
+        : (Array.isArray(queueDoc.priorityQueue) ? queueDoc.priorityQueue : []);
+    } catch {
+      priorityQueue = [];
+    }
+    
+    // Parse nowPlaying (was currentTrack)
+    try {
+      if (queueDoc.nowPlaying) {
+        currentTrack = typeof queueDoc.nowPlaying === 'string'
+          ? JSON.parse(queueDoc.nowPlaying)
+          : queueDoc.nowPlaying;
+      }
+    } catch {
+      currentTrack = null;
+    }
+    
+    return {
+      ...queueDoc,
+      mainQueue,
+      priorityQueue,
+      currentTrack,
+    };
+  };
+
   // Fetch queue
   const {
-    data: queue,
+    data: rawQueue,
     isLoading,
   } = useQuery({
     queryKey: ['queue', venueId],
@@ -82,6 +127,9 @@ export function useQueueManagement(
     staleTime: 0, // Always fetch fresh data
     refetchInterval: enableRealtime ? false : 5000, // Poll every 5s if no realtime
   });
+
+  // Parse the queue data
+  const queue = parseQueueData(rawQueue);
 
   // Setup real-time subscription
   useEffect(() => {
@@ -248,8 +296,8 @@ export function useQueueManagement(
     mainCount: queue?.mainQueue.length || 0,
     totalCount: (queue?.priorityQueue.length || 0) + (queue?.mainQueue.length || 0),
     estimatedWaitTime:
-      (queue?.priorityQueue.reduce((sum, t) => sum + t.duration, 0) || 0) +
-      (queue?.mainQueue.reduce((sum, t) => sum + t.duration, 0) || 0) +
+      (queue?.priorityQueue.reduce((sum: number, t: QueueTrack) => sum + t.duration, 0) || 0) +
+      (queue?.mainQueue.reduce((sum: number, t: QueueTrack) => sum + t.duration, 0) || 0) +
       (queue?.currentTrack?.duration || 0),
   };
 
