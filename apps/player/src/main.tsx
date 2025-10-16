@@ -21,7 +21,7 @@ function App() {
 }
 
 function ProtectedPlayerRoute() {
-  const { session, isLoading } = useAppwrite();
+  const { isLoading } = useAppwrite();
   const venueId = window.location.pathname.split('/')[2];
 
   if (isLoading) {
@@ -32,13 +32,8 @@ function ProtectedPlayerRoute() {
     );
   }
 
-  if (!session) {
-    window.location.href = import.meta.env.PROD 
-      ? 'https://djamms.app' 
-      : 'http://localhost:3000';
-    return null;
-  }
-
+  // Player works without authentication for public viewing
+  // Session is optional and only used for admin features
   return <PlayerView venueId={venueId} />;
 }
 
