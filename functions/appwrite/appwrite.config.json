@@ -39,24 +39,6 @@
             }
         }
     },
-    "sites": [
-        {
-            "$id": "djamms-web-app",
-            "name": "DJAMMS Web App",
-            "enabled": true,
-            "logging": true,
-            "framework": "sveltekit",
-            "timeout": 30,
-            "installCommand": "npm install",
-            "buildCommand": "npm run build",
-            "outputDirectory": "./build",
-            "specification": "s-0.5vcpu-512mb",
-            "buildRuntime": "node-18.0",
-            "adapter": "ssr",
-            "fallbackFile": "",
-            "path": "sites/DJAMMS Web App"
-        }
-    ],
     "tablesDB": [
         {
             "$id": "68e57de9003234a84cae",
