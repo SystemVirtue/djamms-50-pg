@@ -11,8 +11,21 @@ const { Resend } = require('resend');
  */
 module.exports = async ({ req, res, log, error }) => {
   try {
-    // Parse request
-    const body = req.bodyJson || JSON.parse(req.body || '{}');
+    // Parse request body safely
+    let body = {};
+    try {
+      body = req.bodyJson || JSON.parse(req.body || '{}');
+    } catch (parseError) {
+      log(`Body parse error: ${parseError.message}`);
+      log(`Raw body: ${req.body}`);
+      // If JSON parsing fails, return error
+      return res.json({ 
+        success: false, 
+        error: 'Invalid JSON in request body',
+        details: parseError.message 
+      }, 400);
+    }
+    
     const { action, email, token: magicToken } = body;
 
     log(`Magic-link: action=${action}, email=${email}`);
