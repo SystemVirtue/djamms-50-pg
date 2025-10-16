@@ -18,7 +18,6 @@ export function AuthCallback() {
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [isClosingSession, setIsClosingSession] = useState(false);
   const [venueId, setVenueId] = useState('');
-  const [userId, setUserId] = useState('');
 
   useEffect(() => {
     const verifyMagicLink = async () => {
@@ -53,7 +52,6 @@ export function AuthCallback() {
         // Get the current user to verify authentication
         const user = await account.get();
         console.log('Authenticated user:', user);
-        setUserId(user.$id);
 
         // Check if this is a new user (needs profile setup)
         await checkAndSetupUserProfile(user.$id);
@@ -75,49 +73,28 @@ export function AuthCallback() {
     verifyMagicLink();
   }, [searchParams, navigate]);
 
-  const checkAndSetupUserProfile = async (authUserId: string) => {
+  const checkAndSetupUserProfile = async (_authUserId: string) => {
+    // TODO: Re-implement user profile setup once setupUserProfile function is deployed
+    // For now, just redirect to dashboard
     try {
-      // Get user email from auth
       const user = await account.get();
+      console.log('User authenticated:', user);
       
-      // Call Cloud Function to check/setup user profile
-      const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_SETUP_USER_PROFILE;
-      
-      const response = await fetch(functionEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          userId: authUserId,
-          email: user.email // Include email for venue-centric schema
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        if (data.requiresVenueSetup) {
-          // New user - show venue setup
-          setStatus('setup');
-        } else {
-          // Existing user - redirect to their venue dashboard
-          setStatus('success');
-          setTimeout(() => {
-            navigate(`/dashboard/${data.venueId}`); // Use venueId from response
-          }, 2000);
-        }
-      } else {
-        throw new Error(data.message || 'Failed to setup user profile');
-      }
+      // Simple redirect to dashboard (using userId)
+      setStatus('success');
+      setTimeout(() => {
+        navigate(`/dashboard`);
+      }, 1500);
     } catch (err: any) {
-      console.error('Profile setup error:', err);
+      console.error('Profile check error:', err);
       setStatus('error');
-      setErrorMessage('Failed to setup user profile. Please try again.');
+      setErrorMessage('Failed to verify user profile. Please try again.');
     }
   };
 
   const handleVenueSetup = async () => {
+    // TODO: Re-implement venue setup once setupUserProfile function is deployed
+    // For now, just redirect to dashboard
     if (!venueId || venueId.trim().length === 0) {
       alert('Please enter a Venue ID');
       return;
@@ -125,39 +102,12 @@ export function AuthCallback() {
 
     try {
       setStatus('verifying');
-
-      // Get user email from auth
-      const user = await account.get();
-
-      // Call Cloud Function with venueId to complete setup
-      const functionEndpoint = import.meta.env.VITE_APPWRITE_FUNCTION_SETUP_USER_PROFILE;
       
-      const response = await fetch(functionEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          userId: userId,
-          email: user.email, // Include email for venue-centric schema
-          venueId: venueId.trim()
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.venueCreated) {
-        // Venue created - redirect to venue dashboard
-        setStatus('success');
-        setTimeout(() => {
-          navigate(`/dashboard/${data.venueId}`); // Use venueId from response
-        }, 1500);
-      } else if (data.error === 'VENUE_ID_EXISTS') {
-        alert('This Venue ID is already taken. Please choose another one.');
-        setStatus('setup');
-      } else {
-        throw new Error(data.message || 'Failed to create venue');
-      }
+      // Simple redirect to dashboard
+      setStatus('success');
+      setTimeout(() => {
+        navigate(`/dashboard`);
+      }, 1500);
     } catch (err: any) {
       console.error('Venue setup error:', err);
       alert('Failed to setup venue. Please try again.');
