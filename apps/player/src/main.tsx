@@ -51,13 +51,63 @@ function ProtectedPlayerRoute() {
 }
 
 function NotFound() {
+  // Simple landing page at root
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404 - Not Found</h1>
-        <p className="text-gray-400 mb-4">This page does not exist.</p>
-        <p className="text-gray-400">Looking for a venue player? Try /player/venue-001</p>
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <nav className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold">🎵 DJAMMS</h1>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl font-bold mb-4">YouTube-Based Music Player</h2>
+          <p className="text-xl text-gray-400 mb-8">
+            Professional music queue management for bars and venues
+          </p>
+          <a
+            href="/player/venue-001"
+            className="inline-block bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg font-medium transition"
+          >
+            Try Demo Player
+          </a>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="text-4xl mb-4">🎵</div>
+            <h3 className="text-xl font-semibold mb-2">Master Player System</h3>
+            <p className="text-gray-400">
+              Single active player per venue with automatic failover
+            </p>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="text-4xl mb-4">⚡</div>
+            <h3 className="text-xl font-semibold mb-2">Real-time Sync</h3>
+            <p className="text-gray-400">
+              Live queue updates across all devices using AppWrite Realtime API
+            </p>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="text-4xl mb-4">💳</div>
+            <h3 className="text-xl font-semibold mb-2">Paid Requests</h3>
+            <p className="text-gray-400">
+              Priority queue for paid song requests with Stripe integration
+            </p>
+          </div>
+        </div>
+
+        <div className="text-center text-gray-400">
+          <p>Built with React, TypeScript, Vite, and AppWrite</p>
+        </div>
+      </main>
     </div>
   );
 }
