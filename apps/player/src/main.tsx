@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppwriteProvider, useAppwrite } from '@appwrite/AppwriteContext';
 import { Toaster } from 'sonner';
 import { PlayerView } from './components/PlayerView';
+import { Login } from './components/auth/Login';
+import { AuthCallback } from './components/auth/AuthCallback';
 import './index.css';
 
 // Create a client
@@ -25,6 +27,9 @@ function App() {
           <Toaster position="top-right" />
           <Routes>
             <Route path="/player/:venueId" element={<ProtectedPlayerRoute />} />
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth" element={<Login />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppwriteProvider>
@@ -59,6 +64,11 @@ function NotFound() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold">🎵 DJAMMS</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <a href="/auth/login" className="text-gray-300 hover:text-white transition">
+                Login
+              </a>
             </div>
           </div>
         </div>
