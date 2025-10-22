@@ -19,22 +19,46 @@ export class AuthService {
     const url = redirectUrl || config.auth.magicLinkRedirect;
     
     try {
-      console.log('� Sending magic link via AppWrite Account.createMagicURLToken:');
+      console.log('📧 Sending magic link via AppWrite Account.createMagicURLSession:');
       console.log('  - email:', email);
       console.log('  - redirectUrl:', url);
       
-      // Use AppWrite's built-in magic URL session method
-      // This creates a token and sends an email automatically
-      const token = await this.account.createMagicURLSession(
-        'unique()', // userId - AppWrite generates a unique ID
-        email,
-        url // redirect URL after clicking magic link
-      );
-      
-      console.log('✅ Magic URL session created:', {
-        userId: token.userId,
-        expire: token.expire
-      });
+      try {
+        // Use AppWrite's built-in magic URL session method
+        // This creates a token and sends an email automatically
+        const token = await this.account.createMagicURLSession(
+          'unique()', // userId - AppWrite generates a unique ID
+          email,
+          url // redirect URL after clicking magic link
+        );
+        
+        console.log('✅ Magic URL session created:', {
+          userId: token.userId,
+          expire: token.expire
+        });
+        
+      } catch (error: any) {
+        // If there's an active session, delete it and retry
+        if (error.code === 401 && error.message?.includes('session is active')) {
+          console.log('⚠️ Active session detected, clearing sessions...');
+          await this.account.deleteSessions();
+          console.log('✅ Sessions cleared');
+          
+          // Retry creating magic URL session
+          const token = await this.account.createMagicURLSession(
+            'unique()',
+            email,
+            url
+          );
+          
+          console.log('✅ Magic URL session created after cleanup:', {
+            userId: token.userId,
+            expire: token.expire
+          });
+        } else {
+          throw error;
+        }
+      }
       
       // AppWrite automatically sends the email with the magic link
       console.log('✅ Magic link email sent automatically by AppWrite');
@@ -57,21 +81,62 @@ export class AuthService {
       console.log('  - userId:', userId);
       console.log('  - secret:', secret.substring(0, 10) + '...');
       
-      // Use AppWrite's built-in method to complete the magic URL session
-      // This validates the secret token and creates an authenticated session
-      const session = await this.account.updateMagicURLSession(
-        userId,
-        secret
-      );
-
-      console.log('✅ Magic URL session verified:', {
-        userId: session.userId,
-        expire: session.expire
-      });
-
-      // Get the current user account details
-      const user = await this.account.get();
+      let session;
+      let user;
       
+      try {
+        // Try to create the magic URL session
+        session = await this.account.updateMagicURLSession(userId, secret);
+        user = await this.account.get();
+        console.log('✅ Magic URL session created successfully');
+        
+      } catch (error: any) {
+        // Check if error is due to existing session
+        if (error.code === 401 && error.message?.includes('session is active')) {
+          console.log('⚠️ Session already active, checking current user...');
+          
+          try {
+            // Get current session user
+            const currentUser = await this.account.get();
+            console.log('Current user:', currentUser.email);
+            
+            // If it's the same email, use the existing session
+            if (currentUser.email === userId || currentUser.$id === userId) {
+              console.log('✅ Using existing session for same user');
+              user = currentUser;
+              // Get current session
+              const sessions = await this.account.listSessions();
+              session = sessions.sessions[0]; // Use the active session
+              
+            } else {
+              // Different user - delete all sessions and create new one
+              console.log('⚠️ Different user logged in, deleting old sessions...');
+              await this.account.deleteSessions();
+              console.log('✅ Old sessions deleted');
+              
+              // Now create the new session
+              session = await this.account.updateMagicURLSession(userId, secret);
+              user = await this.account.get();
+              console.log('✅ New session created for:', user.email);
+            }
+          } catch (sessionError: any) {
+            console.error('Error handling existing session:', sessionError);
+            // If we can't get current user, try deleting all sessions and retry
+            try {
+              await this.account.deleteSessions();
+              session = await this.account.updateMagicURLSession(userId, secret);
+              user = await this.account.get();
+              console.log('✅ Session created after cleanup');
+            } catch (retryError) {
+              throw sessionError; // Re-throw original error
+            }
+          }
+        } else {
+          // Different error, re-throw
+          throw error;
+        }
+      }
+
       console.log('✅ User logged in:', user.email);
       
       // Create a session object compatible with our AuthSession type
