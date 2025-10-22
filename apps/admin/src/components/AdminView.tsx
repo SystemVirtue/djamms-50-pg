@@ -13,7 +13,7 @@ export function AdminView() {
   const { venueId } = useParams<{ venueId: string }>();
   const [activeTab, setActiveTab] = useState<Tab>('controls');
 
-  const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main-db';
+  const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || '68e57de9003234a84cae';
 
   if (!venueId) {
     return (

@@ -46,7 +46,7 @@ export interface UseRequestHistoryReturn {
 export function useRequestHistory(
   config: UseRequestHistoryConfig
 ): UseRequestHistoryReturn {
-  const { venueId, client, databaseId = 'main-db', autoLoad = true, filters } = config;
+  const { venueId, client, databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || '68e57de9003234a84cae', autoLoad = true, filters } = config;
 
   const [requests, setRequests] = useState<SongRequest[]>([]);
   const [analytics, setAnalytics] = useState<RequestAnalytics | null>(null);

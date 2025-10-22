@@ -63,7 +63,7 @@ export class RequestHistoryService {
   private databaseId: string;
   private collectionId = 'requests';
 
-  constructor(client: Client, databaseId: string = 'main-db') {
+  constructor(client: Client, databaseId: string = import.meta.env.VITE_APPWRITE_DATABASE_ID || '68e57de9003234a84cae') {
     this.databases = new Databases(client);
     this.databaseId = databaseId;
   }

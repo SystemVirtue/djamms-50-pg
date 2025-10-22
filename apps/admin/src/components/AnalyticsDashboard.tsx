@@ -23,7 +23,7 @@ interface AnalyticsDashboardProps {
 
 export function AnalyticsDashboard({
   venueId,
-  databaseId = 'main-db',
+  databaseId = '68e57de9003234a84cae',
   className = '',
 }: AnalyticsDashboardProps) {
   const { client } = useAppwrite();

@@ -82,7 +82,7 @@ export function PlayerView({ venueId }: PlayerViewProps) {
   if (!requestServiceRef.current) {
     requestServiceRef.current = new RequestHistoryService(
       client,
-      import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main-db'
+      import.meta.env.VITE_APPWRITE_DATABASE_ID || '68e57de9003234a84cae'
     );
   }
 

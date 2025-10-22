@@ -23,7 +23,7 @@ interface RequestHistoryPanelProps {
 
 export function RequestHistoryPanel({
   venueId,
-  databaseId = 'main-db',
+  databaseId = '68e57de9003234a84cae',
   className = '',
 }: RequestHistoryPanelProps) {
   const { client } = useAppwrite();

@@ -1,7 +1,7 @@
 import { Client, Databases, Query, ID, RealtimeResponseEvent } from 'appwrite';
 import { Track } from '../hooks/useJukeboxState';
 
-const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main-db';
+const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '68e57de9003234a84cae';
 const QUEUES_COLLECTION_ID = 'queues';
 
 export interface QueueDocument {
