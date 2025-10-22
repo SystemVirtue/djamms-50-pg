@@ -1,18 +1,17 @@
-import { Client, Account, Databases } from 'appwrite';
+import { Account, Databases } from 'appwrite';
+import { getAppwriteClient } from './client';
 import { config } from '@shared/config/env';
 import type { AuthSession, AuthUser } from '@shared/types/auth';
 
 export class AuthService {
-  private client: Client;
   private account: Account;
   private databases: Databases;
 
   constructor() {
-    this.client = new Client()
-      .setEndpoint(config.appwrite.endpoint)
-      .setProject(config.appwrite.projectId);
-    this.account = new Account(this.client);
-    this.databases = new Databases(this.client);
+    // Use singleton client to ensure session is shared across all services
+    const client = getAppwriteClient();
+    this.account = new Account(client);
+    this.databases = new Databases(client);
   }
 
   async sendMagicLink(email: string, redirectUrl?: string): Promise<void> {

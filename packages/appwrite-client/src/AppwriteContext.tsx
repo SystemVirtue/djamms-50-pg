@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Client, Databases } from 'appwrite';
-import { config } from '@shared/config/env';
+import { Databases, Client } from 'appwrite';
+import { getAppwriteClient } from './client';
 import { AuthService } from './auth';
 import type { AuthSession, PlayerState } from '@shared/types';
 
@@ -26,10 +26,8 @@ export const AppwriteProvider: React.FC<AppwriteProviderProps> = ({ children }) 
   const [playerState, setPlayerState] = useState<PlayerState>();
   const [isLoading, setIsLoading] = useState(true);
 
-  const client = new Client()
-    .setEndpoint(config.appwrite.endpoint)
-    .setProject(config.appwrite.projectId);
-
+  // Use singleton client to ensure session is shared across all services
+  const client = getAppwriteClient();
   const databases = new Databases(client);
   const auth = new AuthService();
 
