@@ -147,9 +147,10 @@ export class PlayerQueueSyncService {
           ID.unique(),
           {
             venueId: this.venueId,
-            mainQueue: [],
-            priorityQueue: [],
-            currentTrack: null,
+            mainQueue: JSON.stringify([]),
+            priorityQueue: JSON.stringify([]),
+            nowPlaying: null,
+            createdAt: new Date().toISOString(),
           }
         );
       }
@@ -179,9 +180,9 @@ export class PlayerQueueSyncService {
         'queues',
         queueDoc.$id,
         {
-          mainQueue: localQueue.mainQueue || [],
-          priorityQueue: localQueue.priorityQueue || [],
-          currentTrack: currentTrack,
+          mainQueue: JSON.stringify(localQueue.mainQueue || []),
+          priorityQueue: JSON.stringify(localQueue.priorityQueue || []),
+          nowPlaying: currentTrack ? JSON.stringify(currentTrack) : null,
         }
       );
 
@@ -219,26 +220,37 @@ export class PlayerQueueSyncService {
       const queueDoc: any = response.documents[0];
 
       // Update localStorage active_queue
+      const mainQueue = typeof queueDoc.mainQueue === 'string' 
+        ? JSON.parse(queueDoc.mainQueue) 
+        : (queueDoc.mainQueue || []);
+      const priorityQueue = typeof queueDoc.priorityQueue === 'string'
+        ? JSON.parse(queueDoc.priorityQueue)
+        : (queueDoc.priorityQueue || []);
+      
       const localQueue: LocalStorageQueue = {
-        mainQueue: queueDoc.mainQueue || [],
-        priorityQueue: queueDoc.priorityQueue || [],
+        mainQueue,
+        priorityQueue,
       };
 
       localStorage.setItem(`active_queue_${this.venueId}`, JSON.stringify(localQueue));
 
       // Update localStorage now_playing
-      if (queueDoc.currentTrack) {
+      const nowPlayingData = queueDoc.nowPlaying && typeof queueDoc.nowPlaying === 'string'
+        ? JSON.parse(queueDoc.nowPlaying)
+        : queueDoc.nowPlaying;
+        
+      if (nowPlayingData) {
         const nowPlaying: NowPlayingTrack = {
-          videoId: queueDoc.currentTrack.videoId,
-          title: queueDoc.currentTrack.title,
-          artist: queueDoc.currentTrack.artist,
-          duration: queueDoc.currentTrack.duration,
-          thumbnail: queueDoc.currentTrack.thumbnail,
+          videoId: nowPlayingData.videoId,
+          title: nowPlayingData.title,
+          artist: nowPlayingData.artist,
+          duration: nowPlayingData.duration,
+          thumbnail: nowPlayingData.thumbnail,
           startTime: Date.now(),
-          position: queueDoc.currentTrack.position,
-          isPaid: queueDoc.currentTrack.isPaid,
-          requestedBy: queueDoc.currentTrack.requestedBy,
-          requestedByEmail: queueDoc.currentTrack.requestedByEmail,
+          position: nowPlayingData.position,
+          isPaid: nowPlayingData.isPaid,
+          requestedBy: nowPlayingData.requestedBy,
+          requestedByEmail: nowPlayingData.requestedByEmail,
         };
 
         localStorage.setItem(`now_playing_${this.venueId}`, JSON.stringify(nowPlaying));
@@ -247,9 +259,9 @@ export class PlayerQueueSyncService {
       }
 
       console.log('[PlayerQueueSync] Synced from server:', {
-        mainQueue: queueDoc.mainQueue?.length || 0,
-        priorityQueue: queueDoc.priorityQueue?.length || 0,
-        currentTrack: queueDoc.currentTrack?.title || 'none',
+        mainQueue: mainQueue?.length || 0,
+        priorityQueue: priorityQueue?.length || 0,
+        currentTrack: nowPlayingData?.title || 'none',
       });
     } catch (error) {
       console.error('[PlayerQueueSync] Failed to sync from server:', error);
